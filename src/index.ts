@@ -4,6 +4,15 @@
  * Author: eidng8
  */
 
-export { default as G8DocType } from './DocType';
-export { default as G8Xsd } from './Xsd';
-export * from './types';
+export * from './types/dtd';
+export * from './types/xml';
+
+export * from './utils/type-guards';
+export * from './utils/validators';
+
+export * from './translations/en';
+
+export { default as G8DocType } from './xml/DocType';
+export { default as G8Xsd } from './xml/Document';
+
+export { default as Declaration } from './xml/Declaration';

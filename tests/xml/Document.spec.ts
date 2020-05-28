@@ -6,13 +6,13 @@
 
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { G8Xsd } from '../src';
+import Document from '../../src/xml/Document';
 
-describe('XSD', () => {
+describe('Document', () => {
   it('reads schema', () => {
-    const xsd = readFileSync(resolve(__dirname, './data/schema/rfc5261.xsd'), {
+    const xsd = readFileSync(resolve(__dirname, '../data/schema/rfc5261.xsd'), {
       encoding: 'utf-8',
     });
-    new G8Xsd(xsd);
+    Document.load(xsd);
   });
 });

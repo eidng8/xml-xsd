@@ -4,7 +4,7 @@
  * Author: eidng8
  */
 
-import { DtdExternalType } from '../types';
+import { DtdExternalType } from '../types/dtd';
 
 export default class External {
   readonly type?: DtdExternalType;

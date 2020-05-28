@@ -28,6 +28,7 @@
     "typings"
   ],
   "dependencies": {
+    "core-js": "3.6.5",
     "iconv-lite": "^0.5.1",
     "lodash": "^4.17.15",
     "xml-js": "github:eidng8/xml-js",
