@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ GPLv3 https://www.gnu.org/licenses/gpl-3.0.en.html
+  ~
+  ~ Author: eidng8
+  -->
+
+<patch
+  xmlns="urn:ietf:params:xml:ns:pidf-diff"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="urn:ietf:params:xml:ns:pidf-diff https://eidng8.github.io/rfc5261.xsd">
+  <add sel="-"></add>
+</patch>
