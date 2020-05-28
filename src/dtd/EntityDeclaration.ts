@@ -6,6 +6,11 @@
 
 import { IEntityDeclaration } from '../types/dtd';
 import { TEXTS } from '../translations/en';
+import {
+  validateEntityValue,
+  validatePubIdLiteral,
+  validateSystemIdentifier,
+} from '..';
 
 export default class EntityDeclaration implements IEntityDeclaration {
   readonly name: string;
@@ -29,20 +34,20 @@ export default class EntityDeclaration implements IEntityDeclaration {
     switch (value) {
       case 'PUBLIC':
         this.type = 'public';
-        this.id = declaration[0];
-        this.uri = declaration[1];
+        this.id = validatePubIdLiteral(declaration[0]);
+        this.uri = validateSystemIdentifier(declaration[1]);
         this.unparsed = declaration[3];
         break;
 
       case 'SYSTEM':
         this.type = 'private';
-        this.uri = declaration[0];
+        this.uri = validateSystemIdentifier(declaration[0]);
         this.unparsed = declaration[2];
         break;
 
       default:
         this.type = 'internal';
-        this.value = value.substr(1, value.length - 2).trim();
+        this.value = validateEntityValue(value);
     }
     this.validate();
   }
