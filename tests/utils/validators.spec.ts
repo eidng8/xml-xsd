@@ -4,10 +4,10 @@
  * Author: eidng8
  */
 
-import { TEXTS, validateName } from '../../src';
+import { TEXTS, validateEntityValue, validateName } from '../../src';
 
-describe('Name', function () {
-  it('should return valid name', function () {
+describe('Name', () => {
+  it('should return valid name', () => {
     expect.assertions(8);
     expect(validateName('abc')).toBe('abc');
     expect(validateName('abc-def')).toBe('abc-def');
@@ -19,14 +19,14 @@ describe('Name', function () {
     expect(validateName('あ')).toBe('あ');
   });
 
-  it('should throw on invalid start char', function () {
+  it('should throw on invalid start char', () => {
     expect.assertions(3);
     expect(() => validateName('-abc')).toThrow(TEXTS.errInvalidName);
     expect(() => validateName('.abc')).toThrow(TEXTS.errInvalidName);
     expect(() => validateName('2abc')).toThrow(TEXTS.errInvalidName);
   });
 
-  it('should throw on invalid char', function () {
+  it('should throw on invalid char', () => {
     expect.assertions(5);
     expect(() => validateName('a&bc')).toThrow(TEXTS.errInvalidName);
     expect(() => validateName('a"bc')).toThrow(TEXTS.errInvalidName);
@@ -36,6 +36,9 @@ describe('Name', function () {
   });
 });
 
-describe('Entity value', function () {
-  it('should return valid value', function () {});
+describe('Entity value', () => {
+  it('should return valid value', () => {
+    expect.assertions(1);
+    expect(validateEntityValue('"abc"')).toBe('"abc"');
+  });
 });
