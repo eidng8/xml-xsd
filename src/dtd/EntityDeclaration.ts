@@ -8,9 +8,10 @@ import { IEntityDeclaration } from '../types/dtd';
 import { TEXTS } from '../translations/en';
 import {
   validateEntityValue,
+  validateName,
   validatePubIdLiteral,
   validateSystemIdentifier,
-} from '..';
+} from '../utils/validators';
 
 export default class EntityDeclaration implements IEntityDeclaration {
   readonly name: string;
@@ -25,38 +26,45 @@ export default class EntityDeclaration implements IEntityDeclaration {
 
   readonly value?: string;
 
+  get isInternal(): boolean {
+    return 'internal' == this.type;
+  }
+
+  get isPublic(): boolean {
+    return 'public' == this.type;
+  }
+
+  get isPrivate(): boolean {
+    return 'private' == this.type;
+  }
+
+  get isUnparsed(): boolean {
+    return !this.unparsed;
+  }
+
   constructor(declaration: string[]) {
     if (!declaration || declaration.length < 2) {
       throw new Error(TEXTS.errInvalidEntityDeclaration);
     }
-    this.name = declaration.shift()!;
+    this.name = validateName(declaration.shift()!);
     const value = declaration.shift()!;
     switch (value) {
       case 'PUBLIC':
         this.type = 'public';
         this.id = validatePubIdLiteral(declaration[0]);
         this.uri = validateSystemIdentifier(declaration[1]);
-        this.unparsed = declaration[3];
+        this.unparsed = validateName(declaration[3]);
         break;
 
       case 'SYSTEM':
         this.type = 'private';
         this.uri = validateSystemIdentifier(declaration[0]);
-        this.unparsed = declaration[2];
+        this.unparsed = validateName(declaration[2]);
         break;
 
       default:
         this.type = 'internal';
         this.value = validateEntityValue(value);
     }
-    this.validate();
-  }
-
-  private validate() {
-    if (this.uri) this.validateUri();
-  }
-
-  private validateUri() {
-    if (this.uri!.indexOf('#') >= 0) throw new Error(TEXTS.errInvalidUri);
   }
 }
