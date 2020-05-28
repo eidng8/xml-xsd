@@ -4,6 +4,6 @@
  * Author: eidng8
  */
 
-export { default as G8DocType } from './G8DocType';
-export { default as G8Xsd } from './G8Xsd';
+export { default as G8DocType } from './DocType';
+export { default as G8Xsd } from './Xsd';
 export * from './types';

@@ -4,7 +4,4 @@
  * Author: eidng8
  */
 
-export const enum DtdExternalType {
-  public = 1,
-  private,
-}
+export default class AttList {}

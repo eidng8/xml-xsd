@@ -5,9 +5,9 @@
  */
 
 import { Element, xml2js } from 'xml-js';
-import G8DocType from './G8DocType';
+import DocType from './DocType';
 
-export default class G8Xsd {
+export default class Xsd {
   private xsd!: Element;
 
   private schema!: object;
@@ -18,7 +18,7 @@ export default class G8Xsd {
 
   load(schema: string): void {
     this.xsd = xml2js(schema, {
-      doctypeFn: new G8DocType(this.schema).parser(),
+      doctypeFn: new DocType(this.schema).parser(),
     }) as Element;
     console.log(this.xsd);
   }

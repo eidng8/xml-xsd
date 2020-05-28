@@ -5,11 +5,17 @@
  */
 
 import { SAXParser } from 'sax';
+import External from './dtd/External';
 
-export default class G8DocType {
+export default class DocType {
   schema: object;
 
   declaration = {} as any;
+
+  /**
+   * Parameter entities
+   */
+  variables = [];
 
   constructor(schema: object) {
     this.schema = schema;
@@ -36,18 +42,19 @@ export default class G8DocType {
     };
   }
 
+  /**
+   * Longest form is a "Public" External DTD:
+   * `<!DOCTYPE root_element PUBLIC "DTD_name" "DTD_location">`.
+   *
+   * @param dtd
+   */
   private parseRoot(dtd: string): void {
     let match: RegExpExecArray | null;
-    const buf = [] as string[];
+    const buf = ([] as unknown) as ['PUBLIC' | 'SYSTEM', string, string];
     const reg = /'[^']+'|"[^"]+"|[^\s<>\/=]+=?|(\/?\s*>|<)/g;
     while ((match = reg.exec(dtd))) buf.push(match[0]);
     if (!buf.length) throw new Error('Invalid DOCTYPE');
     this.declaration.root = buf.shift();
-    this.loadExternalDtd(buf);
-  }
-
-  private loadExternalDtd(external: string[]): void {
-    if (!external || !external.length) return;
-    this.declaration.externals = [];
+    this.declaration.external = new External(...buf);
   }
 }
