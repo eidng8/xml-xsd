@@ -7,9 +7,7 @@
 import XRegExp from 'xregexp';
 import { TEXTS } from '../translations/en';
 
-const pubIdChar = "[-'()+,./:=?;!*#@$_%a-zA-Z0-9 \\n\\r]";
-
-const pubIdCharQ = '[-"()+,./:=?;!*#@$_%a-zA-Z0-9 \\n\\r]';
+const pubIdChar = '()+,./:=?;!*#@$_%a-zA-Z0-9 \\n\\r-';
 
 /**
  * https://www.w3.org/TR/REC-xml/#NT-NameStartChar
@@ -46,8 +44,8 @@ export function validateName(str: string): string {
  * @param str
  */
 export function validatePubIdLiteral(str: string): string {
-  const regex = XRegExp(`^"${pubIdChar}*"$|^'${pubIdCharQ}*'$`);
-  if (regex.test(str)) return str;
+  const regex = XRegExp(`^"['${pubIdChar}]*"$|^'["${pubIdChar}]*'$`);
+  if (regex.test(str)) return str.substr(1, str.length - 2).trim();
   throw new Error(TEXTS.errInvalidPubIdLiteral);
 }
 
@@ -55,7 +53,8 @@ export function validatePubIdLiteral(str: string): string {
  * https://www.w3.org/TR/REC-xml/#NT-SystemLiteral
  */
 export function validateSystemLiteral(str: string): string {
-  if (/^'[^']*'$|^"[^"]*"$/.test(str)) return str;
+  if (/^'[^']*'$|^"[^"]*"$/.test(str))
+    return str.substr(1, str.length - 2).trim();
   throw new Error(TEXTS.errInvalidSystemLiteral);
 }
 
@@ -63,8 +62,9 @@ export function validateSystemLiteral(str: string): string {
  * https://www.w3.org/TR/REC-xml/#NT-ExternalID
  */
 export function validateSystemIdentifier(str: string): string {
-  if (/^'[^'#]*'$|^"[^"#]*"$/.test(str)) return str;
-  throw new Error(TEXTS.errInvalidSystemLiteral);
+  if (/^'[^'#]*'$|^"[^"#]*"$/.test(str))
+    return str.substr(1, str.length - 2).trim();
+  throw new Error(TEXTS.errInvalidSystemIdentifier);
 }
 
 /**
@@ -74,6 +74,6 @@ export function validateSystemIdentifier(str: string): string {
 export function validateEntityValue(str: string): string {
   const refs = `${peRef}|${entityRef}|${charRef}`;
   const regex = XRegExp(`^"([^%&"]|${refs})*"$|^'([^%&']|${refs})*'$`);
-  if (regex.test(str)) return str;
+  if (regex.test(str)) return str.substr(1, str.length - 2).trim();
   throw new Error(TEXTS.errInvalidEntityValue);
 }
