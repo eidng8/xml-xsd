@@ -74,8 +74,8 @@ describe('Entity value', () => {
   });
 });
 
-describe('System literal', function () {
-  it('should return valid literal', function () {
+describe('System literal', () => {
+  it('should return valid literal', () => {
     expect.assertions(4);
     expect(validateSystemLiteral("' abc'")).toBe('abc');
     expect(validateSystemLiteral('" abc"')).toBe('abc');
@@ -83,7 +83,7 @@ describe('System literal', function () {
     expect(validateSystemLiteral('"ab\'c"')).toBe("ab'c");
   });
 
-  it('should throw on invalid char', function () {
+  it('should throw on invalid char', () => {
     expect.assertions(2);
     expect(() => validateSystemLiteral("'ab'c'")).toThrow(
       TEXTS.errInvalidSystemLiteral,
@@ -94,8 +94,8 @@ describe('System literal', function () {
   });
 });
 
-describe('System identifier', function () {
-  it('should return valid identifier', function () {
+describe('System identifier', () => {
+  it('should return valid identifier', () => {
     expect.assertions(4);
     expect(validateSystemIdentifier("'abc'")).toBe('abc');
     expect(validateSystemIdentifier('" abc"')).toBe('abc');
@@ -103,7 +103,7 @@ describe('System identifier', function () {
     expect(validateSystemIdentifier('"ab\'c"')).toBe("ab'c");
   });
 
-  it('should throw on invalid char', function () {
+  it('should throw on invalid char', () => {
     expect.assertions(3);
     expect(() => validateSystemIdentifier("'ab'c'")).toThrow(
       TEXTS.errInvalidSystemIdentifier,
@@ -117,8 +117,8 @@ describe('System identifier', function () {
   });
 });
 
-describe('Pubid literal', function () {
-  it('should return valid Pubid', function () {
+describe('Pubid literal', () => {
+  it('should return valid Pubid', () => {
     expect.assertions(3);
     expect(validatePubIdLiteral('"abc"')).toBe('abc');
     expect(validatePubIdLiteral("'abc'")).toBe('abc');
@@ -127,7 +127,7 @@ describe('Pubid literal', function () {
     ).toBe('-//W3C//DTD HTML 4.0 Transitional//EN');
   });
 
-  it('should throw on invalid char', function () {
+  it('should throw on invalid char', () => {
     expect.assertions(2);
     expect(() => validatePubIdLiteral("'工'")).toThrow(
       TEXTS.errInvalidPubIdLiteral,
