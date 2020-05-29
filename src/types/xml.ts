@@ -35,6 +35,8 @@ export interface IComment extends IXmlNodeBase {
 export interface IDocType extends IXmlNodeBase {
   type: 'doctype';
   doctype: string;
+
+  parser(): (value: string, parent: IDocument) => IDocType;
 }
 
 export interface IElement extends IXmlNodeBase {

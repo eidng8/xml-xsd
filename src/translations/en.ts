@@ -5,6 +5,8 @@
  */
 
 export const TEXTS = {
+  errInvalidDocument: 'Invalid document',
+  errInvalidDocType: 'Invalid DOCTYPE',
   errInvalidDeclaration: 'Invalid declaration',
   errInvalidName: 'Invalid name',
   errInvalidSystemLiteral: 'Invalid SystemLiteral',

@@ -4,15 +4,10 @@
  * Author: eidng8
  */
 
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import Document from '../../src/xml/Document';
 
 describe('Document', () => {
   it('reads schema', () => {
-    const xsd = readFileSync(resolve(__dirname, '../data/schema/rfc5261.xsd'), {
-      encoding: 'utf-8',
-    });
-    Document.load(xsd);
+    Document.load('<!DOCTYPE schema [<!ENTITY test "abc">]><root/>');
   });
 });

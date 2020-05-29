@@ -4,12 +4,10 @@
  * Author: eidng8
  */
 
-import { each } from 'lodash';
 import { SAXParser } from 'sax';
 import External from '../dtd/External';
-import { IEntityList } from '../types/dtd';
+import { IEntityDeclaration, IEntityList } from '../types/dtd';
 import { IDocType, IDocument } from '../types/xml';
-import Document from './Document';
 import { TEXTS } from '../translations/en';
 import EntityDeclaration from '../dtd/EntityDeclaration';
 
@@ -28,9 +26,9 @@ export default class DocType implements IDocType {
 
   private _doctype!: string;
 
-  private readonly _parent: Document;
+  private _parent!: IDocument;
 
-  get parent(): Document {
+  get parent(): IDocument {
     return this._parent;
   }
 
@@ -38,27 +36,43 @@ export default class DocType implements IDocType {
     return this._doctype;
   }
 
-  constructor(doc: Document) {
-    this._parent = doc;
+  constructor(dtd?: string) {
+    if (dtd) this.parseDtd(dtd.trim());
   }
 
-  getEntity(name: string): string {
+  getEntity(name: string): IEntityDeclaration {
     return this.dtd.entities[name];
   }
 
   parser(): (value: string, parent: IDocument) => DocType {
     const self = this;
-    return function (this: SAXParser, value: string): DocType {
+    return function (
+      this: SAXParser,
+      value: string,
+      parent: IDocument,
+    ): DocType {
       self._doctype = value;
-      const bp = value.indexOf('[');
-      if (bp < 0) {
-        self.parseRoot(value);
-      } else {
-        self.parseRoot(value.substring(0, bp));
-        self.parseInternal(value.substr(bp), this);
-      }
+      self._parent = parent;
+      // const bp = value.indexOf('[');
+      // if (bp < 0) {
+      //   self.parseRoot(value);
+      // } else {
+      //   self.parseRoot(value.substring(0, bp));
+      //   self.parseInternal(value.substr(bp), this);
+      // }
       return self;
     };
+  }
+
+  parseDtd(dtd: string): void {
+    const bp = dtd.indexOf('[');
+    if (bp < 0) {
+      this.parseRoot(dtd);
+    } else {
+      if (']' != dtd[dtd.length - 1]) throw new Error(TEXTS.errInvalidDocType);
+      this.parseRoot(dtd.substring(0, bp));
+      this.parseInternal(dtd.substring(bp + 1, dtd.length - 2));
+    }
   }
 
   /**
@@ -85,26 +99,26 @@ export default class DocType implements IDocType {
     const buf = ([] as unknown) as ['PUBLIC' | 'SYSTEM', string, string];
     const reg = /'[^']+'|"[^"]+"|[^\s<>\/=]+=?/g;
     while ((match = reg.exec(dtd))) buf.push(match[0]);
-    if (!buf.length) throw new Error('Invalid DOCTYPE');
+    if (!buf.length) throw new Error(TEXTS.errInvalidDocType);
     this.dtd.root = buf.shift();
     this.dtd.external = new External(...buf);
   }
 
-  parseInternal(dtd: string, parser: SAXParser): void {
+  parseInternal(dtd: string): void {
     let idx = 0;
     let markup = '';
     let match;
     while ((match = DocType.extractMarkup(dtd, idx))) {
       [markup, idx] = match;
       if ('%' == markup[0] || '&' == markup[0]) {
-        this.expandEntity(markup.substr(1, markup.length - 2), parser);
+        this.expandEntity(markup.substr(1, markup.length - 2));
       } else {
-        this.parseMarkup(markup, parser);
+        this.parseMarkup(markup);
       }
     }
   }
 
-  parseMarkup(dec: string, parser: SAXParser): void {
+  parseMarkup(dec: string): void {
     let matches = [] as string[];
     let match: RegExpExecArray | null;
     const regex = /'[^']+'|"[^"]+"|[^\s<>\/=]+=?/g;
@@ -112,7 +126,7 @@ export default class DocType implements IDocType {
     if (!matches.length) return;
     switch (matches.shift()) {
       case '!ENTITY':
-        this.parseEntity(parser, matches);
+        this.parseEntity(matches);
         break;
     }
   }
@@ -142,11 +156,11 @@ export default class DocType implements IDocType {
    * @param parser
    * @param declaration
    */
-  parseEntity(parser: SAXParser, declaration: string[]): void {
+  parseEntity(declaration: string[]): void {
     const entity = new EntityDeclaration(declaration);
     this.dtd.entities[entity.name] = entity;
-    if (entity.general && entity.value)
-      parser.ENTITIES[entity.name] = entity.value;
+    // if (entity.general && entity.value)
+    //   parser.ENTITIES[entity.name] = entity.value;
   }
 
   private static extractMarkup(
@@ -170,10 +184,7 @@ export default class DocType implements IDocType {
     return null;
   }
 
-  private expandEntity(entity: string, parser: SAXParser) {
-    each(this.dtd.entities[entity].expand(), (e: EntityDeclaration, k) => {
-      this.dtd.entities[k] = e;
-      if (e.general && e.value) parser.ENTITIES[k] = e.value;
-    });
+  private expandEntity(entity: string) {
+    Object.assign(this.dtd.entities, this.dtd.entities[entity].expand());
   }
 }

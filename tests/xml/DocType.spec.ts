@@ -5,16 +5,12 @@
  */
 
 import DocType from '../../src/xml/DocType';
-import Document from '../../src/xml/Document';
-import { SAXParser } from 'sax';
 
 describe('DOCTYPE', () => {
   describe('!Entity', () => {
     it('should parse internal entity', () => {
-      const parser = new SAXParser();
-      const doctype = new DocType({} as Document);
-      doctype.parseEntity(parser, ['test', '"val"']);
-      expect(parser.ENTITIES.test).toBe('val');
+      const doctype = new DocType('schema [\n  <!ENTITY ncname "\\i\\c*">\n ]');
+      expect(doctype.getEntity('ncname').value).toBe('\\i\\c*');
       // expect(doctype.getEntity('test')).toBe('val');
     });
   });

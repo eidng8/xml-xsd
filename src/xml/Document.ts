@@ -5,9 +5,10 @@
  */
 
 import { xml2js } from 'xml-js';
-import { IDocument, TNode } from '../types/xml';
+import { IDocType, IDocument, TNode } from '../types/xml';
 import DocType from './DocType';
 import Declaration from './Declaration';
+import { TEXTS } from '..';
 
 export default class Document implements IDocument {
   /**
@@ -15,7 +16,7 @@ export default class Document implements IDocument {
    */
   declaration!: Declaration;
 
-  doctype?: DocType;
+  doctype?: IDocType;
 
   readonly url: string;
 
@@ -31,15 +32,34 @@ export default class Document implements IDocument {
 
   static load(xml: string, url = ''): Document {
     const instance = new Document(url);
-    instance.doctype = new DocType(instance);
+    instance.doctype = Document.parseDocType(xml);
     const doc = xml2js(xml, {
       addParent: true,
       elementsKey: 'nodes',
-      doctypeFn: new DocType(instance).parser(),
+      doctypeFn: instance.doctype.parser(),
     }) as IDocument;
     Object.assign(instance, doc);
     instance.declaration = new Declaration(instance, instance.declaration);
     return instance;
+  }
+
+  private static parseDocType(xml: string): IDocType {
+    let start = xml.indexOf('<!DOCTYPE ');
+    if (-1 == start) return new DocType();
+    let c = '';
+    let nest = 0;
+    start += 10;
+    for (let i = start; i < xml.length; i++) {
+      c = xml[i];
+      if ('<' == c) nest++;
+      else if ('>' == c) {
+        if (0 == nest) {
+          return new DocType(xml.substring(start, i));
+        }
+        nest--;
+      }
+    }
+    throw new Error(TEXTS.errInvalidDocType);
   }
 
   private constructor(url: string) {
