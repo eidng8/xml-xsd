@@ -6,6 +6,7 @@
 
 export * from './types/dtd';
 export * from './types/xml';
+export * from './types/parse';
 
 export * from './utils/type-guards';
 export * from './utils/validators';

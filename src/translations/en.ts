@@ -5,6 +5,7 @@
  */
 
 export const TEXTS = {
+  errInvalidDeclaration: 'Invalid declaration',
   errInvalidName: 'Invalid name',
   errInvalidSystemLiteral: 'Invalid SystemLiteral',
   errInvalidSystemIdentifier: 'Invalid system identifier',
@@ -12,4 +13,5 @@ export const TEXTS = {
   errInvalidUri: 'Invalid URI',
   errInvalidEntityValue: 'Invalid entity value',
   errInvalidEntityDeclaration: 'Invalid entity declaration.',
+  errInvalidUnparsedEntityDeclaration: 'Invalid unparsed entity declaration.',
 };

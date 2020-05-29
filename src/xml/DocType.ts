@@ -4,16 +4,22 @@
  * Author: eidng8
  */
 
+import { each } from 'lodash';
 import { SAXParser } from 'sax';
-import { IDocType, IDocument } from '../types/xml';
 import External from '../dtd/External';
+import { IEntityList } from '../types/dtd';
+import { IDocType, IDocument } from '../types/xml';
 import Document from './Document';
+import { TEXTS } from '../translations/en';
 import EntityDeclaration from '../dtd/EntityDeclaration';
 
+/**
+ * Due to the synchronous nature of `sax.js`, externals are not supported.
+ */
 export default class DocType implements IDocType {
   readonly type = 'doctype' as 'doctype';
 
-  dtd = { entities: {} } as any;
+  dtd = { entities: {} as IEntityList } as any;
 
   /**
    * Parameter entities
@@ -85,9 +91,17 @@ export default class DocType implements IDocType {
   }
 
   parseInternal(dtd: string, parser: SAXParser): void {
-    let match: RegExpExecArray | null;
-    const regex = /^\s*<([^<]+)>\s*$/gm;
-    while ((match = regex.exec(dtd))) this.parseMarkup(match[1], parser);
+    let idx = 0;
+    let markup = '';
+    let match;
+    while ((match = DocType.extractMarkup(dtd, idx))) {
+      [markup, idx] = match;
+      if ('%' == markup[0] || '&' == markup[0]) {
+        this.expandEntity(markup.substr(1, markup.length - 2), parser);
+      } else {
+        this.parseMarkup(markup, parser);
+      }
+    }
   }
 
   parseMarkup(dec: string, parser: SAXParser): void {
@@ -130,6 +144,36 @@ export default class DocType implements IDocType {
    */
   parseEntity(parser: SAXParser, declaration: string[]): void {
     const entity = new EntityDeclaration(declaration);
-    if (entity.value) parser.ENTITIES[entity.name] = entity.value;
+    this.dtd.entities[entity.name] = entity;
+    if (entity.general && entity.value)
+      parser.ENTITIES[entity.name] = entity.value;
+  }
+
+  private static extractMarkup(
+    dtd: string,
+    start: number,
+  ): [string, number] | null {
+    let c = '';
+    let s = -1;
+    while (start < dtd.length) {
+      c = dtd[start++];
+      if (-1 == s && ('%' == c || '&' == c)) {
+        const i = dtd.indexOf(';', start);
+        return [dtd.substring(start, i), i + 1];
+      } else if ('<' == c) {
+        s = start;
+      } else if ('>' == c) {
+        if (-1 == s) throw new Error(TEXTS.errInvalidDeclaration);
+        return [dtd.substring(s, start - 1), start];
+      }
+    }
+    return null;
+  }
+
+  private expandEntity(entity: string, parser: SAXParser) {
+    each(this.dtd.entities[entity].expand(), (e: EntityDeclaration, k) => {
+      this.dtd.entities[k] = e;
+      if (e.general && e.value) parser.ENTITIES[k] = e.value;
+    });
   }
 }

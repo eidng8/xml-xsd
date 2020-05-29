@@ -10,10 +10,28 @@ export const enum DtdExternalType {
 }
 
 export interface IEntityDeclaration {
-  name: string;
-  type: 'internal' | 'public' | 'private';
-  unparsed?: string;
-  value?: string;
-  id?: string;
-  uri?: string;
+  readonly name: string;
+  readonly type: 'internal' | 'public' | 'private';
+
+  /**
+   * `false` for parameter entity, otherwise `true`.
+   */
+  readonly general: boolean;
+  readonly unparsed?: string;
+  readonly value?: string;
+  readonly id?: string;
+  readonly uri?: string;
+
+  readonly isInternal: boolean;
+  readonly isPublic: boolean;
+  readonly isPrivate: boolean;
+  readonly isExternal: boolean;
+  readonly isParsed: boolean;
+  readonly isParameter: boolean;
+
+  expand(): IEntityList;
+}
+
+export interface IEntityList {
+  [key: string]: IEntityDeclaration;
 }

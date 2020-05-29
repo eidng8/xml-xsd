@@ -4,7 +4,7 @@
  * Author: eidng8
  */
 
-import { IEntityDeclaration } from '../types/dtd';
+import { IEntityDeclaration, IEntityList } from '../types/dtd';
 import { TEXTS } from '../translations/en';
 import {
   validateEntityValue,
@@ -16,55 +16,120 @@ import {
 export default class EntityDeclaration implements IEntityDeclaration {
   readonly name: string;
 
-  readonly type: 'internal' | 'public' | 'private';
+  /**
+   * `false` for parameter entity, otherwise `true`.
+   */
+  readonly general: boolean;
 
-  readonly unparsed?: string;
+  private _type!: 'internal' | 'public' | 'private';
 
-  readonly id?: string;
+  private _unparsed?: string;
 
-  readonly uri?: string;
+  private _id?: string;
 
-  readonly value?: string;
+  private _uri?: string;
+
+  private _value?: string;
+
+  public get type(): 'internal' | 'public' | 'private' {
+    return this._type;
+  }
+
+  public get unparsed(): string | undefined {
+    return this._unparsed;
+  }
+
+  public get id(): string | undefined {
+    return this._id;
+  }
+
+  public get uri(): string | undefined {
+    return this._uri;
+  }
+
+  public get value(): string | undefined {
+    return this._value;
+  }
 
   get isInternal(): boolean {
-    return 'internal' == this.type;
+    return 'internal' == this._type;
   }
 
   get isPublic(): boolean {
-    return 'public' == this.type;
+    return 'public' == this._type;
   }
 
   get isPrivate(): boolean {
-    return 'private' == this.type;
+    return 'private' == this._type;
   }
 
-  get isUnparsed(): boolean {
-    return !this.unparsed;
+  get isExternal(): boolean {
+    return this.isPublic || this.isPrivate;
+  }
+
+  get isParsed(): boolean {
+    return !this._unparsed;
+  }
+
+  get isParameter(): boolean {
+    return !this.general;
   }
 
   constructor(declaration: string[]) {
     if (!declaration || declaration.length < 2) {
       throw new Error(TEXTS.errInvalidEntityDeclaration);
     }
-    this.name = validateName(declaration.shift()!);
+    const name = declaration.shift()!;
+    if ('%' == name) {
+      this.general = false;
+      this.name = validateName(declaration.shift()!);
+    } else {
+      this.general = true;
+      this.name = validateName(name);
+    }
     const value = declaration.shift()!;
     switch (value) {
       case 'PUBLIC':
-        this.type = 'public';
-        this.id = validatePubIdLiteral(declaration[0]);
-        this.uri = validateSystemIdentifier(declaration[1]);
-        this.unparsed = validateName(declaration[3]);
+        this.parsePublic(declaration);
         break;
 
       case 'SYSTEM':
-        this.type = 'private';
-        this.uri = validateSystemIdentifier(declaration[0]);
-        this.unparsed = validateName(declaration[2]);
+        this.parsePrivate(declaration);
         break;
 
       default:
-        this.type = 'internal';
-        this.value = validateEntityValue(value);
+        this.parseInternal(value);
     }
+  }
+
+  expand(): IEntityList {
+    throw new Error('Method not implemented.');
+  }
+
+  private parsePublic(declaration: string[]): void {
+    this._type = 'public';
+    this._id = validatePubIdLiteral(declaration[0]);
+    this._uri = validateSystemIdentifier(declaration[1]);
+    this.parseUnparsed(declaration.slice(2));
+  }
+
+  private parsePrivate(declaration: string[]): void {
+    this._type = 'private';
+    this._uri = validateSystemIdentifier(declaration[0]);
+    this.parseUnparsed(declaration.slice(1));
+  }
+
+  private parseInternal(value: string): void {
+    this._type = 'internal';
+    this._value = validateEntityValue(value);
+  }
+
+  private parseUnparsed(declaration: string[]): void {
+    if (!declaration.length) return;
+    if ('NDATA' == declaration[0]) {
+      this._unparsed = validateName(declaration[1]);
+      return;
+    }
+    throw new Error(TEXTS.errInvalidUnparsedEntityDeclaration);
   }
 }
