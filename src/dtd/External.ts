@@ -6,6 +6,7 @@
 import axios from 'axios';
 import { DtdExternalType } from '../types/dtd';
 import { TEXTS } from '../translations/en';
+import { parseLiteral } from '../utils/dtd';
 
 export class External {
   _type?: DtdExternalType;
@@ -119,7 +120,7 @@ export class External {
     }
     this._type = DtdExternalType.public;
     this._name = name;
-    this._uri = uri.trim();
+    this._uri = parseLiteral(uri).trim();
   }
 
   private parsePrivate(uri: string): void {
@@ -127,7 +128,7 @@ export class External {
       External.throwError(TEXTS.errInvalidExternalID, 'SYSTEM', uri);
     }
     this._type = DtdExternalType.private;
-    this._uri = uri.trim();
+    this._uri = parseLiteral(uri).trim();
   }
 
   private static throwError(

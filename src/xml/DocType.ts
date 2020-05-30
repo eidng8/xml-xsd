@@ -11,6 +11,7 @@ import { IDocType } from '../types/xml/doctype';
 import { IDocument } from '../types/xml/document';
 import { TEXTS } from '../translations/en';
 import EntityDeclaration from '../dtd/EntityDeclaration';
+import { extractMarkup } from '../utils/dtd';
 
 /**
  * Due to the synchronous nature of `sax.js`, externals are not supported.
@@ -126,7 +127,7 @@ export default class DocType implements IDocType {
     let idx = 0;
     let markup = '';
     let match;
-    while ((match = DocType.extractMarkup(dtd, idx))) {
+    while ((match = extractMarkup(dtd, idx))) {
       [markup, idx] = match;
       if ('%' == markup[0] || '&' == markup[0]) {
         this.expandEntity(markup.substr(1, markup.length - 2));
@@ -178,39 +179,6 @@ export default class DocType implements IDocType {
     this.dtd.entities[entity.name] = entity;
     // if (entity.general && entity.value)
     //   parser.ENTITIES[entity.name] = entity.value;
-  }
-
-  private static extractMarkup(
-    dtd: string,
-    start: number,
-  ): [string, number] | null {
-    let c = '';
-    let s = -1;
-    while (start < dtd.length) {
-      c = dtd[start++];
-      if (-1 == s && ('%' == c || '&' == c)) {
-        const i = dtd.indexOf(';', start);
-        return [dtd.substring(start, i), i + 1];
-      } else if ('<' == c) {
-        s = start;
-      } else if ('>' == c) {
-        if (-1 == s) throw new Error(TEXTS.errInvalidDeclaration);
-        if ('!' == dtd[s + 1]) {
-          if (
-            '-' == dtd[s + 2] &&
-            '-' == dtd[s + 3] &&
-            '-' == dtd[start - 2] &&
-            '-' == dtd[start - 3]
-          ) {
-            s = -1;
-            continue;
-          }
-          throw new Error(TEXTS.errInvalidDeclaration);
-        }
-        return [dtd.substring(s, start - 1), start];
-      }
-    }
-    return null;
   }
 
   private expandEntity(entity: string) {

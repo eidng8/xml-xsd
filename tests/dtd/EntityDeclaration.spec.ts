@@ -10,7 +10,7 @@ describe('General entity', test(false));
 
 describe('Parameter entity', test(true));
 
-describe('Unparsed entities', function () {
+describe('Unparsed entities', () => {
   it('should accept public external', () => {
     expect.assertions(13);
     const declaration = [
@@ -58,7 +58,7 @@ describe('Unparsed entities', function () {
 });
 
 function test(parameter) {
-  return function () {
+  return () => {
     it('should accept internal entity', () => {
       expect.assertions(13);
       const declaration = ['name', '"value"'];
