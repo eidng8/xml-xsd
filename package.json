@@ -28,6 +28,7 @@
     "typings"
   ],
   "dependencies": {
+    "axios": "^0.19.2",
     "core-js": "3.6.5",
     "iconv-lite": "^0.5.1",
     "lodash": "^4.17.15",
@@ -43,6 +44,7 @@
     "@bundle-analyzer/webpack-plugin": "^0.5.1",
     "@types/jest": "^25.1.4",
     "@types/lodash": "^4.14.150",
+    "@types/moxios": "^0.4.9",
     "@types/node": "^12.12.30",
     "@types/sax": "^1.2.1",
     "@types/xregexp": "^4.3.0",
@@ -65,6 +67,7 @@
     "g8-typedoc-dark": "^0.1.2",
     "husky": "^4.2.5",
     "jest": "^25.1.0",
+    "moxios": "^0.4.0",
     "prettier": "2.0.4",
     "pretty-quick": "^2.0.1",
     "ts-jest": "^25.2.1",

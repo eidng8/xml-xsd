@@ -5,9 +5,10 @@
  */
 
 import { SAXParser } from 'sax';
-import External from '../dtd/External';
+import { External } from '../dtd/External';
 import { IEntityDeclaration, IEntityList } from '../types/dtd';
-import { IDocType, IDocument } from '../types/xml';
+import { IDocType } from '../types/xml/doctype';
+import { IDocument } from '../types/xml/document';
 import { TEXTS } from '../translations/en';
 import EntityDeclaration from '../dtd/EntityDeclaration';
 
@@ -17,18 +18,19 @@ import EntityDeclaration from '../dtd/EntityDeclaration';
 export default class DocType implements IDocType {
   readonly type = 'doctype' as 'doctype';
 
-  dtd = { entities: {} as IEntityList } as any;
+  private dtd = {
+    root: '',
+    external: {} as External,
+    entities: {} as IEntityList,
+  };
 
-  /**
-   * Parameter entities
-   */
-  variables = [];
+  private _doctype = '';
 
-  private _doctype!: string;
+  private _parent?: IDocument;
 
-  private _parent!: IDocument;
+  private readonly urlBase: string;
 
-  get parent(): IDocument {
+  get parent(): IDocument | undefined {
     return this._parent;
   }
 
@@ -36,23 +38,27 @@ export default class DocType implements IDocType {
     return this._doctype;
   }
 
-  constructor(dtd?: string) {
-    if (dtd) this.parseDtd(dtd.trim());
+  get rootElement(): string {
+    return this.dtd.root;
+  }
+
+  constructor(urlBase = '') {
+    this.urlBase = urlBase;
   }
 
   getEntity(name: string): IEntityDeclaration {
     return this.dtd.entities[name];
   }
 
-  parser(): (value: string, parent: IDocument) => DocType {
+  async parse(dtd: string) {
+    await this.parseDtd(dtd.trim());
+  }
+
+  parser(): (value: string, parent: object) => DocType {
     const self = this;
-    return function (
-      this: SAXParser,
-      value: string,
-      parent: IDocument,
-    ): DocType {
+    return function (this: SAXParser, value: string, parent: object): DocType {
       self._doctype = value;
-      self._parent = parent;
+      self._parent = parent as IDocument;
       // const bp = value.indexOf('[');
       // if (bp < 0) {
       //   self.parseRoot(value);
@@ -64,13 +70,14 @@ export default class DocType implements IDocType {
     };
   }
 
-  parseDtd(dtd: string): void {
+  private async parseDtd(dtd: string): Promise<void> {
     const bp = dtd.indexOf('[');
     if (bp < 0) {
-      this.parseRoot(dtd);
+      await this.parseRoot(dtd);
+    } else if (']' != dtd[dtd.length - 1]) {
+      throw new Error(TEXTS.errInvalidIntSubset);
     } else {
-      if (']' != dtd[dtd.length - 1]) throw new Error(TEXTS.errInvalidDocType);
-      this.parseRoot(dtd.substring(0, bp));
+      await this.parseRoot(dtd.substring(0, bp));
       this.parseInternal(dtd.substring(bp + 1, dtd.length - 2));
     }
   }
@@ -94,17 +101,28 @@ export default class DocType implements IDocType {
    *
    * @param dtd
    */
-  parseRoot(dtd: string): void {
+  private async parseRoot(dtd: string): Promise<void> {
     let match: RegExpExecArray | null;
-    const buf = ([] as unknown) as ['PUBLIC' | 'SYSTEM', string, string];
+    const buf = [] as string[];
     const reg = /'[^']+'|"[^"]+"|[^\s<>\/=]+=?/g;
     while ((match = reg.exec(dtd))) buf.push(match[0]);
     if (!buf.length) throw new Error(TEXTS.errInvalidDocType);
-    this.dtd.root = buf.shift();
-    this.dtd.external = new External(...buf);
+    this.dtd.root = buf.shift()!;
+    await this.parseExternal(buf);
   }
 
-  parseInternal(dtd: string): void {
+  private async parseExternal(externalID: string[]): Promise<void> {
+    if (!externalID.length) return;
+    const ext = new External(
+      ...(externalID as ['PUBLIC' | 'SYSTEM', string, string]),
+    );
+    const markup = await ext.fetch(this.urlBase);
+    const external = new DocType(this.urlBase);
+    await external.parseInternal(markup);
+    Object.assign(this.dtd.entities, external.dtd.entities);
+  }
+
+  private parseInternal(dtd: string): void {
     let idx = 0;
     let markup = '';
     let match;
@@ -118,7 +136,7 @@ export default class DocType implements IDocType {
     }
   }
 
-  parseMarkup(dec: string): void {
+  private parseMarkup(dec: string): void {
     let matches = [] as string[];
     let match: RegExpExecArray | null;
     const regex = /'[^']+'|"[^"]+"|[^\s<>\/=]+=?/g;
@@ -153,10 +171,9 @@ export default class DocType implements IDocType {
    * <!ENTITY name PUBLIC "public_ID" "URI" NDATA name>
    * ```
    *
-   * @param parser
    * @param declaration
    */
-  parseEntity(declaration: string[]): void {
+  private parseEntity(declaration: string[]): void {
     const entity = new EntityDeclaration(declaration);
     this.dtd.entities[entity.name] = entity;
     // if (entity.general && entity.value)
@@ -178,6 +195,18 @@ export default class DocType implements IDocType {
         s = start;
       } else if ('>' == c) {
         if (-1 == s) throw new Error(TEXTS.errInvalidDeclaration);
+        if ('!' == dtd[s + 1]) {
+          if (
+            '-' == dtd[s + 2] &&
+            '-' == dtd[s + 3] &&
+            '-' == dtd[start - 2] &&
+            '-' == dtd[start - 3]
+          ) {
+            s = -1;
+            continue;
+          }
+          throw new Error(TEXTS.errInvalidDeclaration);
+        }
         return [dtd.substring(s, start - 1), start];
       }
     }

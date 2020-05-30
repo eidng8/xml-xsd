@@ -4,6 +4,9 @@
  * Author: eidng8
  */
 
+import { IDocument } from './xml/document';
+import { IDocType } from './xml/doctype';
+
 export interface IAttribute {
   [key: string]: string | undefined;
 }
@@ -18,8 +21,15 @@ export interface IDeclaration {
 }
 
 export interface IXmlNodeBase {
+  /**
+   * From `xml-js`
+   */
   type: string;
-  readonly parent: IElement | IDocument;
+
+  /**
+   * From `xml-js`
+   */
+  readonly parent?: IElement | IDocument;
 }
 
 export interface ICData extends IXmlNodeBase {
@@ -30,13 +40,6 @@ export interface ICData extends IXmlNodeBase {
 export interface IComment extends IXmlNodeBase {
   type: 'comment';
   comment: string;
-}
-
-export interface IDocType extends IXmlNodeBase {
-  type: 'doctype';
-  doctype: string;
-
-  parser(): (value: string, parent: IDocument) => IDocType;
 }
 
 export interface IElement extends IXmlNodeBase {
@@ -56,12 +59,6 @@ export interface IInstruction extends IXmlNodeBase {
 export interface IText extends IXmlNodeBase {
   type: 'text';
   text: string;
-}
-
-export interface IDocument {
-  declaration?: IDeclaration;
-  doctype?: IDocType;
-  nodes?: TNode[];
 }
 
 export type TNode =

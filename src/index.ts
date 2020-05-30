@@ -6,6 +6,8 @@
 
 export * from './types/dtd';
 export * from './types/xml';
+export * from './types/xml/doctype';
+export * from './types/xml/document';
 export * from './types/parse';
 
 export * from './utils/type-guards';
@@ -13,6 +15,7 @@ export * from './utils/validators';
 
 export * from './translations/en';
 
+export * from './dtd/External';
 export { default as G8DocType } from './xml/DocType';
 export { default as G8Xsd } from './xml/Document';
 

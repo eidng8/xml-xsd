@@ -4,7 +4,8 @@
  * Author: eidng8
  */
 
-import { IDeclaration, IDocument } from '../types/xml';
+import { IDeclaration } from '../types/xml';
+import { IDocument } from '../types/xml/document';
 
 export default class Declaration implements IDeclaration {
   readonly attributes: {

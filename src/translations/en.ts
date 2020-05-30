@@ -16,4 +16,6 @@ export const TEXTS = {
   errInvalidEntityValue: 'Invalid entity value',
   errInvalidEntityDeclaration: 'Invalid entity declaration.',
   errInvalidUnparsedEntityDeclaration: 'Invalid unparsed entity declaration.',
+  errInvalidExternalID: 'Invalid external ID',
+  errInvalidIntSubset: 'Invalid internal subset',
 };

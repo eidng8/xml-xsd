@@ -8,12 +8,12 @@ import {
   ICData,
   IComment,
   IDeclaration,
-  IDocType,
   IElement,
   IInstruction,
   IText,
   TNode,
 } from '../types/xml';
+import { IDocType } from '../types/xml/doctype';
 
 export function isCDataNode(node: TNode): node is ICData {
   return 'cdata' == node.type;

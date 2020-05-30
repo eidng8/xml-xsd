@@ -3,15 +3,28 @@
  *
  * Author: eidng8
  */
-
+import axios from 'axios';
 import { DtdExternalType } from '../types/dtd';
+import { TEXTS } from '../translations/en';
 
-export default class External {
-  readonly type?: DtdExternalType;
+export class External {
+  _type?: DtdExternalType;
 
-  readonly name?: string;
+  _name?: string;
 
-  readonly uri?: string;
+  _uri?: string;
+
+  get type(): DtdExternalType | undefined {
+    return this._type;
+  }
+
+  get name(): string | undefined {
+    return this._name;
+  }
+
+  get uri(): string | undefined {
+    return this._uri;
+  }
 
   /**
    * The DTD is an ISO standard. All ISO standards are approved.
@@ -78,14 +91,49 @@ export default class External {
    * @param uri
    */
   constructor(type: 'PUBLIC' | 'SYSTEM', nameOrUri: string, uri?: string) {
-    if (!type) return;
-    if ('PUBLIC' == type) {
-      this.type = DtdExternalType.public;
-      this.name = nameOrUri;
-      this.uri = uri;
-    } else {
-      this.type = DtdExternalType.private;
-      this.uri = nameOrUri;
+    switch (type) {
+      case 'PUBLIC':
+        this.parsePublic(nameOrUri, uri!);
+        break;
+      case 'SYSTEM':
+        this.parsePrivate(nameOrUri);
+        break;
+
+      default:
+        External.throwError(TEXTS.errInvalidExternalID, type, nameOrUri, uri);
     }
+  }
+
+  /**
+   *
+   * @param urlBase No trailing slash.
+   */
+  async fetch(urlBase?: string): Promise<string> {
+    if (!this.uri) return '';
+    return axios.get(this.uri, { baseURL: urlBase }).then(res => res.data);
+  }
+
+  private parsePublic(name: string, uri: string): void {
+    if (!name || !uri) {
+      External.throwError(TEXTS.errInvalidExternalID, 'PUBLIC', name, uri);
+    }
+    this._type = DtdExternalType.public;
+    this._name = name;
+    this._uri = uri.trim();
+  }
+
+  private parsePrivate(uri: string): void {
+    if (!uri) {
+      External.throwError(TEXTS.errInvalidExternalID, 'SYSTEM', uri);
+    }
+    this._type = DtdExternalType.private;
+    this._uri = uri.trim();
+  }
+
+  private static throwError(
+    msg: string,
+    ...args: (string | undefined)[]
+  ): void {
+    throw new Error(`${msg}: ${args.join(' ')}`);
   }
 }

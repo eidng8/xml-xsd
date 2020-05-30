@@ -5,7 +5,9 @@
  */
 
 import { xml2js } from 'xml-js';
-import { IDocType, IDocument, TNode } from '../types/xml';
+import { TNode } from '../types/xml';
+import { IDocType } from '../types/xml/doctype';
+import { IDocument } from '../types/xml/document';
 import DocType from './DocType';
 import Declaration from './Declaration';
 import { TEXTS } from '..';
@@ -16,7 +18,7 @@ export default class Document implements IDocument {
    */
   declaration!: Declaration;
 
-  doctype?: IDocType;
+  doctype!: IDocType;
 
   readonly url: string;
 

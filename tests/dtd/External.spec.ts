@@ -4,8 +4,7 @@
  * Author: eidng8
  */
 
-import External from '../../src/dtd/External';
-import { DtdExternalType } from '../../src';
+import { DtdExternalType, External } from '../../src';
 
 describe('External DTD', () => {
   it('handles private DTD', () => {
