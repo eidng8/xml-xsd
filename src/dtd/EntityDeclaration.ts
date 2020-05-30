@@ -103,6 +103,7 @@ export default class EntityDeclaration implements IEntityDeclaration {
   }
 
   expand(): IEntityList {
+    // TODO
     throw new Error('Method not implemented.');
   }
 

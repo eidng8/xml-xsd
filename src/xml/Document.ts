@@ -10,7 +10,7 @@ import { IDocType } from '../types/xml/doctype';
 import { IDocument } from '../types/xml/document';
 import DocType from './DocType';
 import Declaration from './Declaration';
-import { TEXTS } from '..';
+import { extractBlock } from '../utils/dtd';
 
 export default class Document implements IDocument {
   /**
@@ -48,20 +48,7 @@ export default class Document implements IDocument {
   private static parseDocType(xml: string): IDocType {
     let start = xml.indexOf('<!DOCTYPE ');
     if (-1 == start) return new DocType();
-    let c = '';
-    let nest = 0;
-    start += 10;
-    for (let i = start; i < xml.length; i++) {
-      c = xml[i];
-      if ('<' == c) nest++;
-      else if ('>' == c) {
-        if (0 == nest) {
-          return new DocType(xml.substring(start, i));
-        }
-        nest--;
-      }
-    }
-    throw new Error(TEXTS.errInvalidDocType);
+    return new DocType(extractBlock(xml, start)[0]);
   }
 
   private constructor(url: string) {
