@@ -11,6 +11,7 @@ import { validateEntityValue, validateName } from '../utils/validators';
 import { EEntityState } from '../types/dtd/EntityState';
 import { External } from './External';
 import { EDtdExternalType } from '..';
+import { rapid } from '../utils/timer';
 
 export default class EntityDeclaration implements IEntityDeclaration {
   private readonly urlBase: string;
@@ -27,6 +28,8 @@ export default class EntityDeclaration implements IEntityDeclaration {
   private _value?: string;
 
   private external?: External;
+
+  private subscribers = [] as [Function, Function][];
 
   get name(): string {
     return this._name;
@@ -55,8 +58,16 @@ export default class EntityDeclaration implements IEntityDeclaration {
     return this.external && this.external.uri;
   }
 
-  get value(): string | undefined {
-    return this._value;
+  get value(): Promise<string> {
+    if (EEntityState.ready == this.state) {
+      return new Promise<string>(resolve => rapid(() => resolve(this._value)));
+    }
+    if (EEntityState.error == this.state) {
+      return new Promise<string>((_, reject) => rapid(() => reject()));
+    }
+    return new Promise<string>((resolve, reject) =>
+      rapid(() => this.subscribers.push([resolve, reject])),
+    );
   }
 
   get isInternal(): boolean {
@@ -142,10 +153,34 @@ export default class EntityDeclaration implements IEntityDeclaration {
     this.external = new External(declaration);
     if (this.external.isParsed) {
       this._state = EEntityState.fetching;
-      this.external.fetch(this.urlBase).then(res => {
-        this._value = res;
-        this._state = EEntityState.ready;
-      });
+      this.external
+        .fetch(this.urlBase)
+        .then(res => {
+          this._state = EEntityState.parsing;
+          this._value = res;
+          this._state = EEntityState.ready;
+          this.resolveSubscribers();
+        })
+        .catch(err => {
+          this._state = EEntityState.error;
+          this._value = '';
+          this.rejectSubscribers(err);
+        });
+    } else {
+      this._value = this.external.uri;
+      this._state = EEntityState.ready;
+    }
+  }
+
+  private resolveSubscribers(): void {
+    while (this.subscribers.length) {
+      (this.subscribers.shift() as Function[])[0](this._value);
+    }
+  }
+
+  private rejectSubscribers(err: Error) {
+    while (this.subscribers.length) {
+      (this.subscribers.shift() as Function[])[1](err);
     }
   }
 }

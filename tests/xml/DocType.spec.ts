@@ -23,7 +23,7 @@ describe('Basics', () => {
   it('should parse internal subset', async () => {
     expect.assertions(1);
     await doctype.parse('root [\n  <!ENTITY ncname "\\i\\c*">\n ]');
-    expect(doctype.getEntity('ncname').value).toBe('\\i\\c*');
+    expect(await doctype.getEntity('ncname').value).toBe('\\i\\c*');
   });
 
   it('should parse internal subset containing comment', async () => {
@@ -33,8 +33,8 @@ describe('Basics', () => {
       <!-- comment -->
       <!ENTITY test2 "val2">
      ]`);
-    expect(doctype.getEntity('test1').value).toBe('val1');
-    expect(doctype.getEntity('test2').value).toBe('val2');
+    expect(await doctype.getEntity('test1').value).toBe('val1');
+    expect(await doctype.getEntity('test2').value).toBe('val2');
   });
 });
 
@@ -60,9 +60,9 @@ describe('Externals', () => {
           status: 200,
           response: '<!ENTITY test1 "val1"><!--ccc--><!ENTITY test2 "val2">',
         })
-        .then(() => {
-          expect(doctype.getEntity('test1').value).toBe('val1');
-          expect(doctype.getEntity('test2').value).toBe('val2');
+        .then(async () => {
+          expect(await doctype.getEntity('test1').value).toBe('val1');
+          expect(await doctype.getEntity('test2').value).toBe('val2');
           done();
         });
     });
@@ -79,9 +79,9 @@ describe('Externals', () => {
           status: 200,
           response: '<!ENTITY test1 "val1"><!--ccc--><!ENTITY test2 "val2">',
         })
-        .then(() => {
-          expect(doctype.getEntity('test1').value).toBe('val1');
-          expect(doctype.getEntity('test2').value).toBe('val2');
+        .then(async () => {
+          expect(await doctype.getEntity('test1').value).toBe('val1');
+          expect(await doctype.getEntity('test2').value).toBe('val2');
           done();
         });
     });

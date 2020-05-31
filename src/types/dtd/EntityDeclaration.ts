@@ -18,7 +18,7 @@ export interface IEntityDeclaration {
    */
   readonly general: boolean;
   readonly unparsed?: string;
-  readonly value?: string;
+  readonly value: Promise<string>;
   readonly id?: string;
   readonly uri?: string;
 
