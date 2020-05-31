@@ -5,6 +5,7 @@
  */
 
 import EntityDeclaration from '../../src/dtd/EntityDeclaration';
+import { TEXTS } from '../../src';
 
 describe('General entity', test(false));
 
@@ -54,6 +55,23 @@ describe('Unparsed entities', () => {
     expect(ent.isExternal).toBe(true);
     expect(ent.isParsed).toBe(false);
     expect(ent.isParameter).toBe(false);
+  });
+});
+
+describe('Exceptions', function () {
+  it('should throw if not enough composition parts', function () {
+    expect.assertions(1);
+    expect(() => new EntityDeclaration([])).toThrow(
+      TEXTS.errInvalidEntityDeclaration,
+    );
+  });
+
+  it('should throw on invalid unparsed entity', function () {
+    expect.assertions(1);
+    const declaration = ['name', 'PUBLIC', '"public_ID"', "'URI'", 'unp_name'];
+    expect(() => new EntityDeclaration(declaration)).toThrow(
+      TEXTS.errInvalidUnparsedEntityDeclaration,
+    );
   });
 });
 

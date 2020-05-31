@@ -4,10 +4,7 @@
  * Author: eidng8
  */
 
-export const enum DtdExternalType {
-  public = 1,
-  private,
-}
+import { IEntityList } from '../dtd/EntityList';
 
 export interface IEntityDeclaration {
   readonly name: string;
@@ -30,8 +27,4 @@ export interface IEntityDeclaration {
   readonly isParameter: boolean;
 
   expand(): IEntityList;
-}
-
-export interface IEntityList {
-  [key: string]: IEntityDeclaration;
 }

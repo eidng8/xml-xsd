@@ -4,7 +4,8 @@
  * Author: eidng8
  */
 
-import { IEntityDeclaration, IEntityList } from '../types/dtd';
+import { IEntityDeclaration } from '../types/dtd/EntityDeclaration';
+import { IEntityList } from '../types/dtd/EntityList';
 import { TEXTS } from '../translations/en';
 import {
   validateEntityValue,

@@ -4,13 +4,13 @@
  * Author: eidng8
  */
 
-import { DtdExternalType, External } from '../../src';
+import { EDtdExternalType, External } from '../../src';
 
 describe('External DTD', () => {
   it('handles private DTD', () => {
     expect.assertions(6);
     const dtd = new External('SYSTEM', '"external.dtd"');
-    expect(dtd.type).toBe(DtdExternalType.private);
+    expect(dtd.type).toBe(EDtdExternalType.private);
     expect(dtd.name).toBeUndefined();
     expect(dtd.uri).toBe('external.dtd');
     expect(dtd.isISO).toBe(false);
@@ -21,7 +21,7 @@ describe('External DTD', () => {
   it('handles public DTD', () => {
     expect.assertions(6);
     const dtd = new External('PUBLIC', 'name', "'external.dtd'");
-    expect(dtd.type).toBe(DtdExternalType.public);
+    expect(dtd.type).toBe(EDtdExternalType.public);
     expect(dtd.name).toBe('name');
     expect(dtd.uri).toBe('external.dtd');
     expect(dtd.isISO).toBe(false);

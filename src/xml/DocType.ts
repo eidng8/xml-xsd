@@ -6,7 +6,8 @@
 
 import { SAXParser } from 'sax';
 import { External } from '../dtd/External';
-import { IEntityDeclaration, IEntityList } from '../types/dtd';
+import { IEntityDeclaration } from '../types/dtd/EntityDeclaration';
+import { IEntityList } from '../types/dtd/EntityList';
 import { IDocType } from '../types/xml/doctype';
 import { IDocument } from '../types/xml/document';
 import { TEXTS } from '../translations/en';
@@ -21,8 +22,10 @@ export default class DocType implements IDocType {
 
   private dtd = {
     root: '',
-    external: {} as External,
-    entities: {} as IEntityList,
+    entities: {
+      general: {} as IEntityList,
+      parameter: {} as IEntityList,
+    },
   };
 
   private _doctype = '';
@@ -48,7 +51,7 @@ export default class DocType implements IDocType {
   }
 
   getEntity(name: string): IEntityDeclaration {
-    return this.dtd.entities[name];
+    return this.dtd.entities.general[name];
   }
 
   async parse(dtd: string) {
@@ -60,13 +63,6 @@ export default class DocType implements IDocType {
     return function (this: SAXParser, value: string, parent: object): DocType {
       self._doctype = value;
       self._parent = parent as IDocument;
-      // const bp = value.indexOf('[');
-      // if (bp < 0) {
-      //   self.parseRoot(value);
-      // } else {
-      //   self.parseRoot(value.substring(0, bp));
-      //   self.parseInternal(value.substr(bp), this);
-      // }
       return self;
     };
   }
@@ -120,7 +116,7 @@ export default class DocType implements IDocType {
     const markup = await ext.fetch(this.urlBase);
     const external = new DocType(this.urlBase);
     await external.parseInternal(markup);
-    Object.assign(this.dtd.entities, external.dtd.entities);
+    Object.assign(this.dtd.entities.general, external.dtd.entities.general);
   }
 
   private parseInternal(dtd: string): void {
@@ -129,8 +125,10 @@ export default class DocType implements IDocType {
     let match;
     while ((match = extractMarkup(dtd, idx))) {
       [markup, idx] = match;
-      if ('%' == markup[0] || '&' == markup[0]) {
+      if ('&' == markup[0]) {
         this.expandEntity(markup.substr(1, markup.length - 2));
+      } else if ('%' == markup[0]) {
+        this.expandParameter(markup.substr(1, markup.length - 2));
       } else {
         this.parseMarkup(markup);
       }
@@ -176,12 +174,18 @@ export default class DocType implements IDocType {
    */
   private parseEntity(declaration: string[]): void {
     const entity = new EntityDeclaration(declaration);
-    this.dtd.entities[entity.name] = entity;
-    // if (entity.general && entity.value)
-    //   parser.ENTITIES[entity.name] = entity.value;
+    this.dtd.entities.general[entity.name] = entity;
   }
 
-  private expandEntity(entity: string) {
-    Object.assign(this.dtd.entities, this.dtd.entities[entity].expand());
+  private expandEntity(entity: string): void {
+    const ent = this.getEntity(entity);
+    if (!ent || !ent.value) return;
+    this.parseInternal(ent.value);
+  }
+
+  private expandParameter(entity: string): void {
+    const ent = this.dtd.entities.parameter[entity];
+    if (!ent || !ent.value) return;
+    this.parseInternal(ent.value);
   }
 }

@@ -4,7 +4,10 @@
  * Author: eidng8
  */
 
-export * from './types/dtd';
+export * from './types/dtd/DtdExternalType';
+export * from './types/dtd/EntityDeclaration';
+export * from './types/dtd/EntityList';
+
 export * from './types/xml';
 export * from './types/xml/doctype';
 export * from './types/xml/document';

@@ -27,20 +27,27 @@ module.exports = {
   rules,
   overrides: [
     {
-      files: [
-        '**/__tests__/*.{j,t}s?(x)',
-        '**/tests/unit/**/*.spec.{j,t}s?(x)',
-      ],
+      files: ['**/tests/**/*.spec.{j,t}s'],
       env: { jest: true },
     },
     {
-      files: ['*.ts?(x)'],
+      files: ['*.ts'],
       rules: Object.assign({}, rules, {
         'no-unused-vars': 'off',
         '@typescript-eslint/no-unused-vars': [
           'error',
           {
             args: 'after-used',
+          },
+        ],
+        '@typescript-eslint/no-non-null-assertion': 'off',
+        '@typescript-eslint/explicit-function-return-type': [
+          'error',
+          {
+            allowExpressions: true,
+            allowTypedFunctionExpressions: true,
+            allowHigherOrderFunctions: true,
+            allowConciseArrowFunctionExpressionsStartingWithVoid: true,
           },
         ],
       }),
