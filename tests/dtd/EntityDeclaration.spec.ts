@@ -6,8 +6,7 @@
 
 import moxios = require('moxios');
 import EntityDeclaration from '../../src/dtd/EntityDeclaration';
-import { EDtdExternalType, TEXTS } from '../../src';
-import { EEntityState } from '../../src/types/dtd/EntityState';
+import { EDtdExternalType, EEntityState, TEXTS } from '../../src';
 
 describe('General entity', test(false));
 
@@ -74,6 +73,45 @@ describe('Exceptions', () => {
     expect(() => new EntityDeclaration(declaration)).toThrow(
       TEXTS.errInvalidUnparsedEntityDeclaration,
     );
+  });
+});
+
+describe('Value queue', () => {
+  beforeEach(() => moxios.install());
+
+  afterEach(() => moxios.uninstall());
+
+  it('should resolve all subscribers', async done => {
+    expect.assertions(2);
+    moxios.wait(() => {
+      const request = moxios.requests.mostRecent();
+      Promise.all([ent.value, ent.value]).then(vals => {
+        expect(vals).toEqual(['abc', 'abc']);
+      });
+      request.respondWith({ response: 'abc' }).then(async () => {
+        expect(await ent.value).toBe('abc');
+        done();
+      });
+    });
+    const declaration = ['name', 'PUBLIC', '"public_ID"', "'URI'"];
+    const ent = new EntityDeclaration(declaration);
+  });
+
+  it('should reject all subscribers', async done => {
+    expect.assertions(3);
+    moxios.wait(() => {
+      const request = moxios.requests.mostRecent();
+      Promise.allSettled([ent.value, ent.value]).then(errs => {
+        expect(errs.length).toBe(2);
+        expect(errs[0].status).toBe('rejected');
+        expect(errs[1].status).toBe('rejected');
+      });
+      request.respondWith({ status: 404, response: 'abc' }).then(() => {
+        ent.value.then(() => fail('Should be rejected')).catch(() => done());
+      });
+    });
+    const declaration = ['name', 'PUBLIC', '"public_ID"', "'URI'"];
+    const ent = new EntityDeclaration(declaration);
   });
 });
 

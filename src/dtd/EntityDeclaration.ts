@@ -6,12 +6,11 @@
 
 import { IEntityDeclaration } from '../types/dtd/EntityDeclaration';
 import { IEntityList } from '../types/dtd/EntityList';
-import { TEXTS } from '../translations/en';
-import { validateEntityValue, validateName } from '../utils/validators';
 import { EEntityState } from '../types/dtd/EntityState';
+import { EDtdExternalType } from '../types/dtd/DtdExternalType';
+import { validateEntityValue, validateName } from '../utils/validators';
+import { TEXTS } from '../translations/en';
 import { External } from './External';
-import { EDtdExternalType } from '..';
-import { rapid } from '../utils/timer';
 
 export default class EntityDeclaration implements IEntityDeclaration {
   private readonly urlBase: string;
@@ -30,6 +29,8 @@ export default class EntityDeclaration implements IEntityDeclaration {
   private external?: External;
 
   private subscribers = [] as [Function, Function][];
+
+  private lastError?: Error;
 
   get name(): string {
     return this._name;
@@ -60,13 +61,13 @@ export default class EntityDeclaration implements IEntityDeclaration {
 
   get value(): Promise<string> {
     if (EEntityState.ready == this.state) {
-      return new Promise<string>(resolve => rapid(() => resolve(this._value)));
+      return new Promise<string>(resolve => resolve(this._value));
     }
     if (EEntityState.error == this.state) {
-      return new Promise<string>((_, reject) => rapid(() => reject()));
+      return new Promise<string>((_, reject) => reject(this.lastError));
     }
     return new Promise<string>((resolve, reject) =>
-      rapid(() => this.subscribers.push([resolve, reject])),
+      this.subscribers.push([resolve, reject]),
     );
   }
 
@@ -163,6 +164,7 @@ export default class EntityDeclaration implements IEntityDeclaration {
         })
         .catch(err => {
           this._state = EEntityState.error;
+          this.lastError = err;
           this._value = '';
           this.rejectSubscribers(err);
         });

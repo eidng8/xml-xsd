@@ -63,6 +63,7 @@ export default class DocType implements IDocType {
     return function (this: SAXParser, value: string, parent: object): DocType {
       self._doctype = value;
       self._parent = parent as IDocument;
+      Object.assign(this.ENTITIES, self.dtd.entities.general);
       return self;
     };
   }
@@ -172,20 +173,19 @@ export default class DocType implements IDocType {
    */
   private parseEntity(declaration: string[]): void {
     const entity = new EntityDeclaration(declaration, this.urlBase);
-    this.dtd.entities.general[entity.name] = entity;
+    if (entity.isParameter) this.dtd.entities.parameter[entity.name] = entity;
+    else this.dtd.entities.general[entity.name] = entity;
   }
 
   private expandEntity(entity: string): void {
     const ent = this.getEntity(entity);
     if (!ent) throw new Error(TEXTS.errInvalidEntity);
-    if (!ent.value) return;
-    this.parseInternal(ent.value);
+    ent.value.then(v => this.parseInternal(v));
   }
 
   private expandParameter(entity: string): void {
     const ent = this.dtd.entities.parameter[entity];
     if (!ent) throw new Error(TEXTS.errInvalidEntity);
-    if (!ent.value) return;
-    this.parseInternal(ent.value);
+    ent.value.then(v => this.parseInternal(v));
   }
 }
