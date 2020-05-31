@@ -4,6 +4,7 @@
  * Author: eidng8
  */
 
+import moxios = require('moxios');
 import EntityDeclaration from '../../src/dtd/EntityDeclaration';
 import { EDtdExternalType, TEXTS } from '../../src';
 
@@ -97,44 +98,60 @@ function test(parameter) {
       expect(ent.isParameter).toBe(parameter);
     });
 
-    it('should accept public external', () => {
+    it('should accept public external', async done => {
       expect.assertions(13);
+      moxios.install();
+      moxios.wait(() => {
+        const request = moxios.requests.mostRecent();
+        request.respondWith({ response: 'abc' }).then(() => {
+          expect(ent.type).toBe(EDtdExternalType.public);
+          expect(ent.name).toBe('name');
+          expect(ent.id).toBe('public_ID');
+          expect(ent.uri).toBe('URI');
+          expect(ent.value).toBe('abc');
+          expect(ent.unparsed).toBeUndefined();
+          expect(ent.general).toBe(!parameter);
+          expect(ent.isInternal).toBe(false);
+          expect(ent.isPublic).toBe(true);
+          expect(ent.isPrivate).toBe(false);
+          expect(ent.isExternal).toBe(true);
+          expect(ent.isParsed).toBe(true);
+          expect(ent.isParameter).toBe(parameter);
+          moxios.uninstall();
+          done();
+        });
+      });
       const declaration = ['name', 'PUBLIC', '"public_ID"', "'URI'"];
       if (parameter) declaration.unshift('%');
       const ent = new EntityDeclaration(declaration);
-      expect(ent.type).toBe(EDtdExternalType.public);
-      expect(ent.name).toBe('name');
-      expect(ent.id).toBe('public_ID');
-      expect(ent.uri).toBe('URI');
-      expect(ent.value).toBeUndefined();
-      expect(ent.unparsed).toBeUndefined();
-      expect(ent.general).toBe(!parameter);
-      expect(ent.isInternal).toBe(false);
-      expect(ent.isPublic).toBe(true);
-      expect(ent.isPrivate).toBe(false);
-      expect(ent.isExternal).toBe(true);
-      expect(ent.isParsed).toBe(true);
-      expect(ent.isParameter).toBe(parameter);
     });
 
-    it('should accept private external', () => {
+    it('should accept private external', async done => {
       expect.assertions(13);
+      moxios.install();
+      moxios.wait(() => {
+        const request = moxios.requests.mostRecent();
+        request.respondWith({ response: 'abc' }).then(() => {
+          expect(ent.type).toBe(EDtdExternalType.private);
+          expect(ent.name).toBe('name');
+          expect(ent.uri).toBe('URI');
+          expect(ent.id).toBeUndefined();
+          expect(ent.value).toBe('abc');
+          expect(ent.unparsed).toBeUndefined();
+          expect(ent.general).toBe(!parameter);
+          expect(ent.isInternal).toBe(false);
+          expect(ent.isPublic).toBe(false);
+          expect(ent.isPrivate).toBe(true);
+          expect(ent.isExternal).toBe(true);
+          expect(ent.isParsed).toBe(true);
+          expect(ent.isParameter).toBe(parameter);
+          moxios.uninstall();
+          done();
+        });
+      });
       const declaration = ['name', 'SYSTEM', "'URI'"];
       if (parameter) declaration.unshift('%');
       const ent = new EntityDeclaration(declaration);
-      expect(ent.type).toBe(EDtdExternalType.private);
-      expect(ent.name).toBe('name');
-      expect(ent.uri).toBe('URI');
-      expect(ent.id).toBeUndefined();
-      expect(ent.value).toBeUndefined();
-      expect(ent.unparsed).toBeUndefined();
-      expect(ent.general).toBe(!parameter);
-      expect(ent.isInternal).toBe(false);
-      expect(ent.isPublic).toBe(false);
-      expect(ent.isPrivate).toBe(true);
-      expect(ent.isExternal).toBe(true);
-      expect(ent.isParsed).toBe(true);
-      expect(ent.isParameter).toBe(parameter);
     });
   };
 }

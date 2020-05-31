@@ -4,7 +4,7 @@
  * Author: eidng8
  */
 
-import * as moxios from 'moxios';
+import moxios = require('moxios');
 import DocType from '../../src/xml/DocType';
 
 describe('Basics', () => {
