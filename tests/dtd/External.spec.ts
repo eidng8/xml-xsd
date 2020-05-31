@@ -4,7 +4,7 @@
  * Author: eidng8
  */
 
-import { EDtdExternalType, External } from '../../src';
+import { EDtdExternalType, External, TEXTS } from '../../src';
 
 describe('External DTD', () => {
   it('handles private DTD', () => {
@@ -67,5 +67,28 @@ describe('External DTD', () => {
     expect(dtd.owner).toBe('W3C');
     expect(dtd.description).toBe('DTD HTML 4.0 Transitional');
     expect(dtd.language).toBe('EN');
+  });
+});
+
+describe('Errors', function () {
+  it('should throw on invalid type', function () {
+    expect.assertions(1);
+    expect(() => new External(['abc'])).toThrow(TEXTS.errInvalidExternalID);
+  });
+
+  it('should throw if name is missing', function () {
+    expect.assertions(2);
+    expect(() => new External(['PUBLIC'])).toThrow(TEXTS.errInvalidExternalID);
+    expect(() => new External(['PUBLIC', '', 'abc'])).toThrow(
+      TEXTS.errInvalidExternalID,
+    );
+  });
+
+  it('should throw if URI is missing', function () {
+    expect.assertions(2);
+    expect(() => new External(['PUBLIC', 'abc'])).toThrow(
+      TEXTS.errInvalidExternalID,
+    );
+    expect(() => new External(['SYSTEM'])).toThrow(TEXTS.errInvalidExternalID);
   });
 });

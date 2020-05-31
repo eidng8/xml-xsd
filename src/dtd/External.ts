@@ -155,6 +155,6 @@ export class External {
     msg: string,
     ...args: (string | undefined)[]
   ): void {
-    throw new Error(`${msg}: ${args.join(' ')}`);
+    throw new Error(`${msg}: ${args ? args.join(' ') : ''}`);
   }
 }
