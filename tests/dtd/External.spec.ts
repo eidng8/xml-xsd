@@ -70,13 +70,13 @@ describe('External DTD', () => {
   });
 });
 
-describe('Errors', function () {
-  it('should throw on invalid type', function () {
+describe('Errors', () => {
+  it('should throw on invalid type', () => {
     expect.assertions(1);
     expect(() => new External(['abc'])).toThrow(TEXTS.errInvalidExternalID);
   });
 
-  it('should throw if name is missing', function () {
+  it('should throw if name is missing', () => {
     expect.assertions(2);
     expect(() => new External(['PUBLIC'])).toThrow(TEXTS.errInvalidExternalID);
     expect(() => new External(['PUBLIC', '', 'abc'])).toThrow(
@@ -84,7 +84,7 @@ describe('Errors', function () {
     );
   });
 
-  it('should throw if URI is missing', function () {
+  it('should throw if URI is missing', () => {
     expect.assertions(2);
     expect(() => new External(['PUBLIC', 'abc'])).toThrow(
       TEXTS.errInvalidExternalID,

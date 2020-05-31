@@ -7,6 +7,7 @@
 import moxios = require('moxios');
 import EntityDeclaration from '../../src/dtd/EntityDeclaration';
 import { EDtdExternalType, TEXTS } from '../../src';
+import { EEntityState } from '../../src/types/dtd/EntityState';
 
 describe('General entity', test(false));
 
@@ -59,15 +60,15 @@ describe('Unparsed entities', () => {
   });
 });
 
-describe('Exceptions', function () {
-  it('should throw if not enough composition parts', function () {
+describe('Exceptions', () => {
+  it('should throw if not enough composition parts', () => {
     expect.assertions(1);
     expect(() => new EntityDeclaration([])).toThrow(
       TEXTS.errInvalidEntityDeclaration,
     );
   });
 
-  it('should throw on invalid unparsed entity', function () {
+  it('should throw on invalid unparsed entity', () => {
     expect.assertions(1);
     const declaration = ['name', 'PUBLIC', '"public_ID"', "'URI'", 'unp_name'];
     expect(() => new EntityDeclaration(declaration)).toThrow(
@@ -79,7 +80,7 @@ describe('Exceptions', function () {
 function test(parameter) {
   return () => {
     it('should accept internal entity', () => {
-      expect.assertions(13);
+      expect.assertions(14);
       const declaration = ['name', '"value"'];
       if (parameter) declaration.unshift('%');
       const ent = new EntityDeclaration(declaration);
@@ -96,10 +97,11 @@ function test(parameter) {
       expect(ent.isExternal).toBe(false);
       expect(ent.isParsed).toBe(true);
       expect(ent.isParameter).toBe(parameter);
+      expect(ent.state).toBe(EEntityState.ready);
     });
 
     it('should accept public external', async done => {
-      expect.assertions(13);
+      expect.assertions(15);
       moxios.install();
       moxios.wait(() => {
         const request = moxios.requests.mostRecent();
@@ -117,6 +119,7 @@ function test(parameter) {
           expect(ent.isExternal).toBe(true);
           expect(ent.isParsed).toBe(true);
           expect(ent.isParameter).toBe(parameter);
+          expect(ent.state).toBe(EEntityState.ready);
           moxios.uninstall();
           done();
         });
@@ -124,6 +127,7 @@ function test(parameter) {
       const declaration = ['name', 'PUBLIC', '"public_ID"', "'URI'"];
       if (parameter) declaration.unshift('%');
       const ent = new EntityDeclaration(declaration);
+      expect(ent.state).toBe(EEntityState.fetching);
     });
 
     it('should accept private external', async done => {
