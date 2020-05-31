@@ -108,11 +108,9 @@ export default class DocType implements IDocType {
     await this.parseExternal(buf);
   }
 
-  private async parseExternal(externalID: string[]): Promise<void> {
-    if (!externalID.length) return;
-    const ext = new External(
-      ...(externalID as ['PUBLIC' | 'SYSTEM', string, string]),
-    );
+  private async parseExternal(extDecl: string[]): Promise<void> {
+    if (!extDecl.length) return;
+    const ext = new External(extDecl);
     const markup = await ext.fetch(this.urlBase);
     const external = new DocType(this.urlBase);
     await external.parseInternal(markup);
@@ -173,19 +171,21 @@ export default class DocType implements IDocType {
    * @param declaration
    */
   private parseEntity(declaration: string[]): void {
-    const entity = new EntityDeclaration(declaration);
+    const entity = new EntityDeclaration(declaration, this.urlBase);
     this.dtd.entities.general[entity.name] = entity;
   }
 
   private expandEntity(entity: string): void {
     const ent = this.getEntity(entity);
-    if (!ent || !ent.value) return;
+    if (!ent) throw new Error(TEXTS.errInvalidEntity);
+    if (!ent.value) return;
     this.parseInternal(ent.value);
   }
 
   private expandParameter(entity: string): void {
     const ent = this.dtd.entities.parameter[entity];
-    if (!ent || !ent.value) return;
+    if (!ent) throw new Error(TEXTS.errInvalidEntity);
+    if (!ent.value) return;
     this.parseInternal(ent.value);
   }
 }

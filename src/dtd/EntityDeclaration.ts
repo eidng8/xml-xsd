@@ -7,99 +7,94 @@
 import { IEntityDeclaration } from '../types/dtd/EntityDeclaration';
 import { IEntityList } from '../types/dtd/EntityList';
 import { TEXTS } from '../translations/en';
-import {
-  validateEntityValue,
-  validateName,
-  validatePubIdLiteral,
-  validateSystemIdentifier,
-} from '../utils/validators';
+import { validateEntityValue, validateName } from '../utils/validators';
+import { EEntityState } from '../types/dtd/EntityState';
+import { External } from './External';
+import { EDtdExternalType } from '..';
 
 export default class EntityDeclaration implements IEntityDeclaration {
-  readonly name: string;
+  private readonly urlBase: string;
+
+  private _name!: string;
 
   /**
    * `false` for parameter entity, otherwise `true`.
    */
-  readonly general: boolean;
+  private _general!: boolean;
 
-  private _type!: 'internal' | 'public' | 'private';
-
-  private _unparsed?: string;
-
-  private _id?: string;
-
-  private _uri?: string;
+  private _state = EEntityState.unknown;
 
   private _value?: string;
 
-  public get type(): 'internal' | 'public' | 'private' {
-    return this._type;
+  private external?: External;
+
+  get name(): string {
+    return this._name;
   }
 
-  public get unparsed(): string | undefined {
-    return this._unparsed;
+  get general(): boolean {
+    return this._general;
+  }
+  get type(): EDtdExternalType {
+    return (this.external && this.external.type) || EDtdExternalType.internal;
   }
 
-  public get id(): string | undefined {
-    return this._id;
+  get state(): EEntityState {
+    return this._state;
   }
 
-  public get uri(): string | undefined {
-    return this._uri;
+  get unparsed(): string | undefined {
+    return this.external && this.external.unparsed;
   }
 
-  public get value(): string | undefined {
+  get id(): string | undefined {
+    return this.external && this.external.name;
+  }
+
+  get uri(): string | undefined {
+    return this.external && this.external.uri;
+  }
+
+  get value(): string | undefined {
     return this._value;
   }
 
   get isInternal(): boolean {
-    return 'internal' == this._type;
+    return undefined === this.external;
   }
 
   get isPublic(): boolean {
-    return 'public' == this._type;
+    return !!this.external && EDtdExternalType.public == this.external!.type;
   }
 
   get isPrivate(): boolean {
-    return 'private' == this._type;
+    return !!this.external && EDtdExternalType.private == this.external!.type;
   }
 
   get isExternal(): boolean {
-    return this.isPublic || this.isPrivate;
+    return this.external !== undefined;
   }
 
   get isParsed(): boolean {
-    return !this._unparsed;
+    return this.isInternal || this.external!.isParsed;
   }
 
   get isParameter(): boolean {
-    return !this.general;
+    return !this._general;
   }
 
-  constructor(declaration: string[]) {
+  constructor(declaration: string[], urlBase = '') {
     if (!declaration || declaration.length < 2) {
+      this._state = EEntityState.error;
       throw new Error(TEXTS.errInvalidEntityDeclaration);
     }
-    const name = declaration.shift()!;
-    if ('%' == name) {
-      this.general = false;
-      this.name = validateName(declaration.shift()!);
-    } else {
-      this.general = true;
-      this.name = validateName(name);
-    }
-    const value = declaration.shift()!;
-    switch (value) {
-      case 'PUBLIC':
-        this.parsePublic(declaration);
-        break;
-
-      case 'SYSTEM':
-        this.parsePrivate(declaration);
-        break;
-
-      default:
-        this.parseInternal(value);
+    try {
+      this.urlBase = urlBase;
+      this.parseName(declaration);
+      this.parseValue(declaration);
+    } catch (e) {
+      this._state = EEntityState.error;
+      throw e;
     }
   }
 
@@ -108,30 +103,49 @@ export default class EntityDeclaration implements IEntityDeclaration {
     throw new Error('Method not implemented.');
   }
 
-  private parsePublic(declaration: string[]): void {
-    this._type = 'public';
-    this._id = validatePubIdLiteral(declaration[0]);
-    this._uri = validateSystemIdentifier(declaration[1]);
-    this.parseUnparsed(declaration.slice(2));
+  /**
+   * Will mutate `declaration`
+   * @param declaration
+   */
+  private parseName(declaration: string[]): void {
+    const name = declaration.shift()!;
+    if ('%' == name) {
+      this._general = false;
+      this._name = validateName(declaration.shift()!);
+    } else {
+      this._general = true;
+      this._name = validateName(name);
+    }
   }
 
-  private parsePrivate(declaration: string[]): void {
-    this._type = 'private';
-    this._uri = validateSystemIdentifier(declaration[0]);
-    this.parseUnparsed(declaration.slice(1));
+  /**
+   * Will mutate `declaration`
+   * @param declaration
+   */
+  private parseValue(declaration: string[]): void {
+    switch (declaration[0]) {
+      case 'PUBLIC':
+      case 'SYSTEM':
+        this.parseExternal(declaration);
+        break;
+      default:
+        this.parseInternal(declaration[0]);
+    }
   }
 
   private parseInternal(value: string): void {
-    this._type = 'internal';
     this._value = validateEntityValue(value);
+    this._state = EEntityState.ready;
   }
 
-  private parseUnparsed(declaration: string[]): void {
-    if (!declaration.length) return;
-    if ('NDATA' == declaration[0]) {
-      this._unparsed = validateName(declaration[1]);
-      return;
+  private parseExternal(declaration: string[]): void {
+    this.external = new External(declaration);
+    if (this.external.isParsed) {
+      this._state = EEntityState.fetching;
+      this.external.fetch(this.urlBase).then(res => {
+        this._value = res;
+        this._state = EEntityState.ready;
+      });
     }
-    throw new Error(TEXTS.errInvalidUnparsedEntityDeclaration);
   }
 }

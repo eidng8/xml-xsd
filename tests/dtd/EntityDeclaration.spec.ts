@@ -5,7 +5,7 @@
  */
 
 import EntityDeclaration from '../../src/dtd/EntityDeclaration';
-import { TEXTS } from '../../src';
+import { EDtdExternalType, TEXTS } from '../../src';
 
 describe('General entity', test(false));
 
@@ -23,7 +23,7 @@ describe('Unparsed entities', () => {
       'unp_name',
     ];
     const ent = new EntityDeclaration(declaration);
-    expect(ent.type).toBe('public');
+    expect(ent.type).toBe(EDtdExternalType.public);
     expect(ent.name).toBe('name');
     expect(ent.id).toBe('public_ID');
     expect(ent.uri).toBe('URI');
@@ -42,7 +42,7 @@ describe('Unparsed entities', () => {
     expect.assertions(13);
     const declaration = ['name', 'SYSTEM', "'URI'", 'NDATA', 'unp_name'];
     const ent = new EntityDeclaration(declaration);
-    expect(ent.type).toBe('private');
+    expect(ent.type).toBe(EDtdExternalType.private);
     expect(ent.name).toBe('name');
     expect(ent.uri).toBe('URI');
     expect(ent.id).toBeUndefined();
@@ -82,7 +82,7 @@ function test(parameter) {
       const declaration = ['name', '"value"'];
       if (parameter) declaration.unshift('%');
       const ent = new EntityDeclaration(declaration);
-      expect(ent.type).toBe('internal');
+      expect(ent.type).toBe(EDtdExternalType.internal);
       expect(ent.name).toBe('name');
       expect(ent.value).toBe('value');
       expect(ent.id).toBeUndefined();
@@ -102,7 +102,7 @@ function test(parameter) {
       const declaration = ['name', 'PUBLIC', '"public_ID"', "'URI'"];
       if (parameter) declaration.unshift('%');
       const ent = new EntityDeclaration(declaration);
-      expect(ent.type).toBe('public');
+      expect(ent.type).toBe(EDtdExternalType.public);
       expect(ent.name).toBe('name');
       expect(ent.id).toBe('public_ID');
       expect(ent.uri).toBe('URI');
@@ -122,7 +122,7 @@ function test(parameter) {
       const declaration = ['name', 'SYSTEM', "'URI'"];
       if (parameter) declaration.unshift('%');
       const ent = new EntityDeclaration(declaration);
-      expect(ent.type).toBe('private');
+      expect(ent.type).toBe(EDtdExternalType.private);
       expect(ent.name).toBe('name');
       expect(ent.uri).toBe('URI');
       expect(ent.id).toBeUndefined();

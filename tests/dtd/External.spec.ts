@@ -9,7 +9,7 @@ import { EDtdExternalType, External } from '../../src';
 describe('External DTD', () => {
   it('handles private DTD', () => {
     expect.assertions(6);
-    const dtd = new External('SYSTEM', '"external.dtd"');
+    const dtd = new External(['SYSTEM', '"external.dtd"']);
     expect(dtd.type).toBe(EDtdExternalType.private);
     expect(dtd.name).toBeUndefined();
     expect(dtd.uri).toBe('external.dtd');
@@ -20,7 +20,7 @@ describe('External DTD', () => {
 
   it('handles public DTD', () => {
     expect.assertions(6);
-    const dtd = new External('PUBLIC', 'name', "'external.dtd'");
+    const dtd = new External(['PUBLIC', '"name"', "'external.dtd'"]);
     expect(dtd.type).toBe(EDtdExternalType.public);
     expect(dtd.name).toBe('name');
     expect(dtd.uri).toBe('external.dtd');
@@ -31,7 +31,7 @@ describe('External DTD', () => {
 
   it('checks ISO standard', () => {
     expect.assertions(4);
-    const dtd = new External('PUBLIC', 'ISO//name', '"external.dtd"');
+    const dtd = new External(['PUBLIC', '"ISO//name"', '"external.dtd"']);
     expect(dtd.name).toBe('ISO//name');
     expect(dtd.isISO).toBe(true);
     expect(dtd.isApproved).toBe(false);
@@ -40,7 +40,7 @@ describe('External DTD', () => {
 
   it('checks approved standard', () => {
     expect.assertions(4);
-    const dtd = new External('PUBLIC', '+//name', '"external.dtd"');
+    const dtd = new External(['PUBLIC', '"+//name"', '"external.dtd"']);
     expect(dtd.name).toBe('+//name');
     expect(dtd.isISO).toBe(false);
     expect(dtd.isApproved).toBe(true);
@@ -49,7 +49,7 @@ describe('External DTD', () => {
 
   it('checks standard types', () => {
     expect.assertions(4);
-    const dtd = new External('PUBLIC', '-//name', '"external.dtd"');
+    const dtd = new External(['PUBLIC', '"-//name"', '"external.dtd"']);
     expect(dtd.name).toBe('-//name');
     expect(dtd.isISO).toBe(false);
     expect(dtd.isApproved).toBe(false);
@@ -58,11 +58,11 @@ describe('External DTD', () => {
 
   it('returns details of DTD', () => {
     expect.assertions(4);
-    const dtd = new External(
+    const dtd = new External([
       'PUBLIC',
-      '-//W3C//DTD HTML 4.0 Transitional//EN',
+      '"-//W3C//DTD HTML 4.0 Transitional//EN"',
       '"external.dtd"',
-    );
+    ]);
     expect(dtd.name).toBe('-//W3C//DTD HTML 4.0 Transitional//EN');
     expect(dtd.owner).toBe('W3C');
     expect(dtd.description).toBe('DTD HTML 4.0 Transitional');

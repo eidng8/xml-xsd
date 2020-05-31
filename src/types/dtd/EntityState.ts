@@ -4,8 +4,10 @@
  * Author: eidng8
  */
 
-export const enum EDtdExternalType {
-  internal,
-  public,
-  private,
+export const enum EEntityState {
+  unknown,
+  ready,
+  fetching,
+  parsing,
+  error,
 }

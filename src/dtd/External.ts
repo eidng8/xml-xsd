@@ -4,18 +4,20 @@
  * Author: eidng8
  */
 import axios from 'axios';
-import { DtdExternalType } from '../types/dtd';
+import { EDtdExternalType } from '../types/dtd/DtdExternalType';
 import { TEXTS } from '../translations/en';
-import { parseLiteral } from '../utils/dtd';
+import { validatePubIdLiteral, validateSystemIdentifier } from '..';
 
 export class External {
-  _type?: DtdExternalType;
+  _type?: EDtdExternalType;
 
   _name?: string;
 
   _uri?: string;
 
-  get type(): DtdExternalType | undefined {
+  private _unparsed?: string;
+
+  get type(): EDtdExternalType | undefined {
     return this._type;
   }
 
@@ -32,7 +34,7 @@ export class External {
    */
   get isISO(): boolean {
     return (
-      DtdExternalType.public == this.type &&
+      EDtdExternalType.public == this.type &&
       ((this.name as unknown) as boolean) &&
       this.name!.startsWith('ISO')
     );
@@ -43,7 +45,7 @@ export class External {
    */
   get isApproved(): boolean {
     return (
-      DtdExternalType.public == this.type &&
+      EDtdExternalType.public == this.type &&
       ((this.name as unknown) as boolean) &&
       '+' == this.name![0]
     );
@@ -54,7 +56,7 @@ export class External {
    */
   get isUnapproved(): boolean {
     return (
-      DtdExternalType.public == this.type &&
+      EDtdExternalType.public == this.type &&
       ((this.name as unknown) as boolean) &&
       '-' == this.name![0]
     );
@@ -84,24 +86,26 @@ export class External {
     return this.name.split('//', 4)[3];
   }
 
-  /**
-   *
-   * @param type
-   * @param nameOrUri This is the URI to "Private" (SYSTEM) external DTDs,
-   * or ID of "Public" (PUBLIC) external DTDs.
-   * @param uri
-   */
-  constructor(type: 'PUBLIC' | 'SYSTEM', nameOrUri: string, uri?: string) {
+  get unparsed(): string | undefined {
+    return this._unparsed;
+  }
+
+  get isParsed(): boolean {
+    return !this._unparsed;
+  }
+
+  constructor(extDecl: string[]) {
+    const parts = extDecl.slice(0);
+    const type = parts.shift();
     switch (type) {
       case 'PUBLIC':
-        this.parsePublic(nameOrUri, uri!);
+        this.parsePublic(parts);
         break;
       case 'SYSTEM':
-        this.parsePrivate(nameOrUri);
+        this.parsePrivate(parts);
         break;
-
       default:
-        External.throwError(TEXTS.errInvalidExternalID, type, nameOrUri, uri);
+        External.throwError(TEXTS.errInvalidExternalID, type, ...parts);
     }
   }
 
@@ -114,21 +118,37 @@ export class External {
     return axios.get(this.uri, { baseURL: urlBase }).then(res => res.data);
   }
 
-  private parsePublic(name: string, uri: string): void {
+  private parsePublic(parts: string[]): void {
+    const name = parts.shift()!;
+    const uri = parts.shift()!;
     if (!name || !uri) {
       External.throwError(TEXTS.errInvalidExternalID, 'PUBLIC', name, uri);
     }
-    this._type = DtdExternalType.public;
-    this._name = name;
-    this._uri = parseLiteral(uri).trim();
+    this._type = EDtdExternalType.public;
+    this._name = validatePubIdLiteral(name);
+    this._uri = validateSystemIdentifier(uri);
+    if (parts.length) this.parseUnparsed(parts);
   }
 
-  private parsePrivate(uri: string): void {
+  private parsePrivate(parts: string[]): void {
+    const uri = parts.shift()!;
     if (!uri) {
       External.throwError(TEXTS.errInvalidExternalID, 'SYSTEM', uri);
     }
-    this._type = DtdExternalType.private;
-    this._uri = parseLiteral(uri).trim();
+    this._type = EDtdExternalType.private;
+    this._uri = validateSystemIdentifier(uri);
+    if (parts.length) this.parseUnparsed(parts);
+  }
+
+  private parseUnparsed(declaration: string[]): void {
+    if (!declaration.length) return;
+    if ('NDATA' == declaration[0]) {
+      this._unparsed = declaration[1];
+      // TODO
+      //this._unparsed = validateNotation(declaration[1]);
+      return;
+    }
+    throw new Error(TEXTS.errInvalidUnparsedEntityDeclaration);
   }
 
   private static throwError(

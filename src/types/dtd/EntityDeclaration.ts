@@ -5,10 +5,13 @@
  */
 
 import { IEntityList } from '../dtd/EntityList';
+import { EEntityState } from './EntityState';
+import { EDtdExternalType } from './DtdExternalType';
 
 export interface IEntityDeclaration {
   readonly name: string;
-  readonly type: 'internal' | 'public' | 'private';
+  readonly type: EDtdExternalType;
+  readonly state: EEntityState;
 
   /**
    * `false` for parameter entity, otherwise `true`.

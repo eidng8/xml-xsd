@@ -13,6 +13,7 @@ export const TEXTS = {
   errInvalidSystemIdentifier: 'Invalid system identifier',
   errInvalidPubIdLiteral: 'Invalid PubidLiteral',
   errInvalidUri: 'Invalid URI',
+  errInvalidEntity: 'Invalid entity',
   errInvalidEntityValue: 'Invalid entity value',
   errInvalidEntityDeclaration: 'Invalid entity declaration.',
   errInvalidUnparsedEntityDeclaration: 'Invalid unparsed entity declaration.',
