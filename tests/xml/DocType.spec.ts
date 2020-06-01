@@ -88,4 +88,24 @@ describe('Externals', () => {
     });
     await doctype.parse('root PUBLIC "DTD_name" "DTD_location"');
   });
+
+  it('should parse mixed', async done => {
+    expect.assertions(2);
+    moxios.wait(() => {
+      const request = moxios.requests.mostRecent();
+      expect(request.url).toBe('DTD_location');
+      request
+        .respondWith({
+          status: 200,
+          response: '<!ENTITY test "abc">',
+        })
+        .then(async () => {
+          expect(await doctype.getEntity('test').value).toBe('abc');
+          done();
+        });
+    });
+    await doctype.parse(
+      'root PUBLIC "DTD_name" "DTD_location" [<!ENTITY test "abc">]',
+    );
+  });
 });
