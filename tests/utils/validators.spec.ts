@@ -16,30 +16,46 @@ import {
 describe('Name', () => {
   it('should return valid name', () => {
     expect.assertions(8);
-    expect(validateName('abc')).toBe('abc');
-    expect(validateName('abc-def')).toBe('abc-def');
-    expect(validateName('abc_def')).toBe('abc_def');
-    expect(validateName('abc.def')).toBe('abc.def');
-    expect(validateName(':abc_def')).toBe(':abc_def');
-    expect(validateName('_abc')).toBe('_abc');
-    expect(validateName('工')).toBe('工');
-    expect(validateName('あ')).toBe('あ');
+    expect(validateName('abc', '')).toBe('abc');
+    expect(validateName('abc-def', '')).toBe('abc-def');
+    expect(validateName('abc_def', '')).toBe('abc_def');
+    expect(validateName('abc.def', '')).toBe('abc.def');
+    expect(validateName(':abc_def', '')).toBe(':abc_def');
+    expect(validateName('_abc', '')).toBe('_abc');
+    expect(validateName('工', '')).toBe('工');
+    expect(validateName('あ', '')).toBe('あ');
   });
 
   it('should throw on invalid start char', () => {
     expect.assertions(3);
-    expect(() => validateName('-abc')).toThrow(TEXTS.errInvalidName);
-    expect(() => validateName('.abc')).toThrow(TEXTS.errInvalidName);
-    expect(() => validateName('2abc')).toThrow(TEXTS.errInvalidName);
+    expect(() => validateName('-abc', 'cde')).toThrow(
+      `Invalid name \`-abc\` in \`cde\``,
+    );
+    expect(() => validateName('.abc', 'cde')).toThrow(
+      `Invalid name \`.abc\` in \`cde\``,
+    );
+    expect(() => validateName('2abc', 'cde')).toThrow(
+      `Invalid name \`2abc\` in \`cde\``,
+    );
   });
 
   it('should throw on invalid char', () => {
     expect.assertions(5);
-    expect(() => validateName('a&bc')).toThrow(TEXTS.errInvalidName);
-    expect(() => validateName('a"bc')).toThrow(TEXTS.errInvalidName);
-    expect(() => validateName("a'bc")).toThrow(TEXTS.errInvalidName);
-    expect(() => validateName('a\tbc')).toThrow(TEXTS.errInvalidName);
-    expect(() => validateName('a bc')).toThrow(TEXTS.errInvalidName);
+    expect(() => validateName('a&bc', 'cde')).toThrow(
+      `Invalid name \`a&bc\` in \`cde\``,
+    );
+    expect(() => validateName('a"bc', 'cde')).toThrow(
+      `Invalid name \`a"bc\` in \`cde\``,
+    );
+    expect(() => validateName("a'bc", 'cde')).toThrow(
+      `Invalid name \`a'bc\` in \`cde\``,
+    );
+    expect(() => validateName('a\tbc', 'cde')).toThrow(
+      `Invalid name \`a\tbc\` in \`cde\``,
+    );
+    expect(() => validateName('a bc', 'cde')).toThrow(
+      `Invalid name \`a bc\` in \`cde\``,
+    );
   });
 });
 

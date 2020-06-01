@@ -4,11 +4,13 @@
  * Author: eidng8
  */
 
+import { reduce } from 'lodash';
+
 export const TEXTS = {
   errInvalidDocument: 'Invalid document',
   errInvalidDocType: 'Invalid DOCTYPE',
   errInvalidDeclaration: 'Invalid declaration',
-  errInvalidName: 'Invalid name',
+  errInvalidName: 'Invalid name `%s` in `%s`.',
   errInvalidSystemLiteral: 'Invalid SystemLiteral',
   errInvalidSystemIdentifier: 'Invalid system identifier',
   errInvalidPubIdLiteral: 'Invalid PubidLiteral',
@@ -20,3 +22,7 @@ export const TEXTS = {
   errInvalidExternalID: 'Invalid external ID',
   errInvalidIntSubset: 'Invalid internal subset',
 };
+
+export function format(template: string, params: string[]): string {
+  return reduce(params, (prev, param) => prev.replace('%s', param), template);
+}

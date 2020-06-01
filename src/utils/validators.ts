@@ -5,7 +5,7 @@
  */
 
 import XRegExp from 'xregexp';
-import { TEXTS } from '../translations/en';
+import { format, TEXTS } from '../translations/en';
 
 const pubIdChar = '()+,./:=?;!*#@$_%a-zA-Z0-9 \\n\\r-';
 
@@ -34,9 +34,9 @@ const charRef = '&#(?=\\d+;)[^&;]+;|&#x(?=[\\da-fA-F]+;)[^&;]+;';
  * https://www.w3.org/TR/REC-xml/#NT-Name
  * @param str
  */
-export function validateName(str: string): string {
+export function validateName(str: string, context: string): string {
   if (XRegExp(`^${name}$`).test(str)) return str;
-  throw new Error(TEXTS.errInvalidName);
+  throw new Error(format(TEXTS.errInvalidName, [str, context]));
 }
 
 /**

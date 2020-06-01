@@ -51,10 +51,11 @@ describe('Externals', () => {
   });
 
   it('should parse private external ID', async done => {
-    expect.assertions(3);
+    expect.assertions(4);
     moxios.wait(() => {
       const request = moxios.requests.mostRecent();
       expect(request.url).toBe('DTD_location');
+      expect(request.config.baseURL).toBe('http://example.com/base');
       request
         .respondWith({
           status: 200,

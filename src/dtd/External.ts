@@ -4,9 +4,12 @@
  * Author: eidng8
  */
 import axios from 'axios';
-import { EDtdExternalType } from '../types/dtd/DtdExternalType';
 import { TEXTS } from '../translations/en';
-import { validatePubIdLiteral, validateSystemIdentifier } from '..';
+import { EDtdExternalType } from '../types/dtd/DtdExternalType';
+import {
+  validatePubIdLiteral,
+  validateSystemIdentifier,
+} from '../utils/validators';
 
 export class External {
   _type?: EDtdExternalType;
@@ -110,11 +113,11 @@ export class External {
   }
 
   /**
-   *
+   * Fetches the remote content. Return empty string if the external has no URI.
    * @param urlBase No trailing slash.
    */
   async fetch(urlBase?: string): Promise<string> {
-    if (!this.uri) return '';
+    if (!this.uri) return Promise.resolve('');
     return axios.get(this.uri, { baseURL: urlBase }).then(res => res.data);
   }
 

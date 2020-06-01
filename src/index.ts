@@ -23,6 +23,7 @@ export * from './translations/en';
 
 export * from './dtd/External';
 
+export * from './dtd/NotationDeclaration';
 export { default as EntityDeclaration } from './dtd/EntityDeclaration';
 export { default as DocType } from './xml/DocType';
 export { default as Document } from './xml/Document';

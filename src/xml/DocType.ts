@@ -121,7 +121,7 @@ export default class DocType implements IDocType {
   private parseInternal(dtd: string): void {
     let idx = 0;
     let markup = '';
-    let match;
+    let match: [string, number] | null;
     while ((match = extractMarkup(dtd, idx))) {
       [markup, idx] = match;
       if ('&' == markup[0]) {

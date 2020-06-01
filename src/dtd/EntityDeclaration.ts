@@ -13,6 +13,8 @@ import { TEXTS } from '../translations/en';
 import { External } from './External';
 
 export default class EntityDeclaration implements IEntityDeclaration {
+  private readonly declaration: string;
+
   private readonly urlBase: string;
 
   private _name!: string;
@@ -39,6 +41,7 @@ export default class EntityDeclaration implements IEntityDeclaration {
   get general(): boolean {
     return this._general;
   }
+
   get type(): EDtdExternalType {
     return (this.external && this.external.type) || EDtdExternalType.internal;
   }
@@ -100,6 +103,7 @@ export default class EntityDeclaration implements IEntityDeclaration {
       this._state = EEntityState.error;
       throw new Error(TEXTS.errInvalidEntityDeclaration);
     }
+    this.declaration = `<${declaration.join(' ')}>`;
     try {
       this.urlBase = urlBase;
       this.parseName(declaration);
@@ -123,10 +127,10 @@ export default class EntityDeclaration implements IEntityDeclaration {
     const name = declaration.shift()!;
     if ('%' == name) {
       this._general = false;
-      this._name = validateName(declaration.shift()!);
+      this._name = validateName(declaration.shift()!, this.declaration);
     } else {
       this._general = true;
-      this._name = validateName(name);
+      this._name = validateName(name, this.declaration);
     }
   }
 
