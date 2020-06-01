@@ -5,7 +5,7 @@
  */
 
 import { IXmlNodeBase } from '../xml';
-import { IEntityDeclaration } from '../dtd';
+import { IEntityDeclaration } from '../dtd/EntityDeclaration';
 
 export interface IDocType extends IXmlNodeBase {
   /**

@@ -22,7 +22,8 @@ export * from './utils/validators';
 export * from './translations/en';
 
 export * from './dtd/External';
-export { default as G8DocType } from './xml/DocType';
-export { default as G8Xsd } from './xml/Document';
 
+export { default as EntityDeclaration } from './dtd/EntityDeclaration';
+export { default as DocType } from './xml/DocType';
+export { default as Document } from './xml/Document';
 export { default as Declaration } from './xml/Declaration';

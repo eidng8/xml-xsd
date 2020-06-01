@@ -3,7 +3,7 @@
     "target": "esnext",
     "module": "commonjs",
     "moduleResolution": "node",
-    "lib": ["esnext"],
+    "lib": ["esnext", "ES2020.Promise"],
     "declaration": true,
     "declarationMap": false,
     "sourceMap": false,
@@ -29,6 +29,6 @@
     "out": "docs",
     "theme": "node_modules/g8-typedoc-dark/default/"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "tests"]
+  "include": ["src", "tests"],
+  "exclude": ["node_modules"]
 }

@@ -4,8 +4,8 @@
  * Author: eidng8
  */
 
-const path = require('path');
-const WBA = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+import { resolve as _resolve } from 'path';
+import { BundleAnalyzerPlugin as WBA } from 'webpack-bundle-analyzer';
 
 const plugins = [];
 if (process.env.WBA) {
@@ -18,7 +18,7 @@ module.exports = {
     index: './src/index.ts',
   },
   output: {
-    path: path.resolve(__dirname, 'lib'),
+    path: _resolve(__dirname, 'lib'),
     filename: '[name].js',
     libraryTarget: 'commonjs',
   },

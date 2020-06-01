@@ -5,7 +5,7 @@
  */
 
 import moxios = require('moxios');
-import DocType from '../../src/xml/DocType';
+import { DocType } from '../../src';
 
 describe('Basics', () => {
   let doctype: DocType;

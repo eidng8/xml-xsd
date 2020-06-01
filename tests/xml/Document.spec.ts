@@ -4,7 +4,7 @@
  * Author: eidng8
  */
 
-import Document from '../../src/xml/Document';
+import { Document } from '../../src';
 
 describe('Document', () => {
   it('reads schema', () => {

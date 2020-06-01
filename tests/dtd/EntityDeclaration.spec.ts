@@ -5,8 +5,12 @@
  */
 
 import moxios = require('moxios');
-import EntityDeclaration from '../../src/dtd/EntityDeclaration';
-import { EDtdExternalType, EEntityState, TEXTS } from '../../src';
+import {
+  EDtdExternalType,
+  EEntityState,
+  EntityDeclaration,
+  TEXTS,
+} from '../../src';
 
 describe('General entity', test(false));
 

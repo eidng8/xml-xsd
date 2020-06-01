@@ -4,8 +4,7 @@
  * Author: eidng8
  */
 
-import { extractBlock, extractMarkup } from '../../src/utils/dtd';
-import { TEXTS } from '../../src';
+import { extractBlock, extractMarkup, TEXTS } from '../../src';
 
 describe('extractBlock', function () {
   it('should throw if not well-formed', function () {
