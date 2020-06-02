@@ -22,18 +22,18 @@ describe('Unparsed entities', () => {
     const declaration =
       '<!ENTITY name PUBLIC "public_ID" \'URI\' NDATA unp_name>';
     const ent = new EntityDeclaration(declaration);
-    expect(ent.type).toBe(EDtdExternalType.public);
     expect(ent.name).toBe('name');
-    expect(ent.id).toBe('public_ID');
-    expect(ent.uri).toBe('URI');
-    expect(ent.unparsed).toBe('unp_name');
     expect(ent.general).toBe(true);
     expect(ent.isInternal).toBe(false);
-    expect(ent.isPublic).toBe(true);
-    expect(ent.isPrivate).toBe(false);
     expect(ent.isExternal).toBe(true);
     expect(ent.isParsed).toBe(false);
     expect(ent.isParameter).toBe(false);
+    expect(ent.external!.type).toBe(EDtdExternalType.public);
+    expect(ent.external!.name).toBe('public_ID');
+    expect(ent.external!.uri).toBe('URI');
+    expect(ent.external!.unparsed).toBe('unp_name');
+    expect(ent.external!.isPublic).toBe(true);
+    expect(ent.external!.isPrivate).toBe(false);
     expect(await ent.value).toBe('URI');
   });
 
@@ -41,18 +41,18 @@ describe('Unparsed entities', () => {
     expect.assertions(13);
     const declaration = "<!ENTITY name SYSTEM 'URI' NDATA unp_name>";
     const ent = new EntityDeclaration(declaration);
-    expect(ent.type).toBe(EDtdExternalType.private);
     expect(ent.name).toBe('name');
-    expect(ent.uri).toBe('URI');
-    expect(ent.id).toBeUndefined();
-    expect(ent.unparsed).toBe('unp_name');
     expect(ent.general).toBe(true);
     expect(ent.isInternal).toBe(false);
-    expect(ent.isPublic).toBe(false);
-    expect(ent.isPrivate).toBe(true);
     expect(ent.isExternal).toBe(true);
     expect(ent.isParsed).toBe(false);
     expect(ent.isParameter).toBe(false);
+    expect(ent.external!.type).toBe(EDtdExternalType.private);
+    expect(ent.external!.uri).toBe('URI');
+    expect(ent.external!.name).toBeUndefined();
+    expect(ent.external!.unparsed).toBe('unp_name');
+    expect(ent.external!.isPublic).toBe(false);
+    expect(ent.external!.isPrivate).toBe(true);
     expect(await ent.value).toBe('URI');
   });
 });
@@ -116,19 +116,14 @@ describe('Value queue', () => {
 function test(parameter) {
   return () => {
     it('should accept internal entity', async () => {
-      expect.assertions(14);
+      expect.assertions(9);
       let declaration = '<!ENTITY name "value">';
       if (parameter) declaration = '<!ENTITY % name "value">';
       const ent = new EntityDeclaration(declaration);
-      expect(ent.type).toBe(EDtdExternalType.internal);
       expect(ent.name).toBe('name');
-      expect(ent.id).toBeUndefined();
-      expect(ent.uri).toBeUndefined();
-      expect(ent.unparsed).toBeUndefined();
+      expect(ent.external).toBeUndefined();
       expect(ent.general).toBe(!parameter);
       expect(ent.isInternal).toBe(true);
-      expect(ent.isPublic).toBe(false);
-      expect(ent.isPrivate).toBe(false);
       expect(ent.isExternal).toBe(false);
       expect(ent.isParsed).toBe(true);
       expect(ent.isParameter).toBe(parameter);
@@ -142,19 +137,19 @@ function test(parameter) {
       moxios.wait(() => {
         const request = moxios.requests.mostRecent();
         request.respondWith({ response: 'abc' }).then(async () => {
-          expect(ent.type).toBe(EDtdExternalType.public);
           expect(ent.name).toBe('name');
-          expect(ent.id).toBe('public_ID');
-          expect(ent.uri).toBe('URI');
-          expect(ent.unparsed).toBeUndefined();
+          expect(ent.external!.type).toBe(EDtdExternalType.public);
           expect(ent.general).toBe(!parameter);
           expect(ent.isInternal).toBe(false);
-          expect(ent.isPublic).toBe(true);
-          expect(ent.isPrivate).toBe(false);
           expect(ent.isExternal).toBe(true);
           expect(ent.isParsed).toBe(true);
           expect(ent.isParameter).toBe(parameter);
           expect(ent.state).toBe(EEntityState.ready);
+          expect(ent.external!.name).toBe('public_ID');
+          expect(ent.external!.uri).toBe('URI');
+          expect(ent.external!.unparsed).toBeUndefined();
+          expect(ent.external!.isPublic).toBe(true);
+          expect(ent.external!.isPrivate).toBe(false);
           expect(await ent.value).toBe('abc');
           moxios.uninstall();
           done();
@@ -172,18 +167,18 @@ function test(parameter) {
       moxios.wait(() => {
         const request = moxios.requests.mostRecent();
         request.respondWith({ response: 'abc' }).then(async () => {
-          expect(ent.type).toBe(EDtdExternalType.private);
           expect(ent.name).toBe('name');
-          expect(ent.uri).toBe('URI');
-          expect(ent.id).toBeUndefined();
-          expect(ent.unparsed).toBeUndefined();
           expect(ent.general).toBe(!parameter);
           expect(ent.isInternal).toBe(false);
-          expect(ent.isPublic).toBe(false);
-          expect(ent.isPrivate).toBe(true);
           expect(ent.isExternal).toBe(true);
           expect(ent.isParsed).toBe(true);
           expect(ent.isParameter).toBe(parameter);
+          expect(ent.external!.type).toBe(EDtdExternalType.private);
+          expect(ent.external!.uri).toBe('URI');
+          expect(ent.external!.name).toBeUndefined();
+          expect(ent.external!.unparsed).toBeUndefined();
+          expect(ent.external!.isPublic).toBe(false);
+          expect(ent.external!.isPrivate).toBe(true);
           expect(await ent.value).toBe('abc');
           moxios.uninstall();
           done();

@@ -5,7 +5,6 @@
  */
 
 export const enum EDtdExternalType {
-  internal,
-  public,
+  public = 1,
   private,
 }

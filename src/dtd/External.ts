@@ -12,11 +12,11 @@ import {
 } from '../utils/validators';
 
 export class External {
-  _type?: EDtdExternalType;
+  private _type?: EDtdExternalType;
 
-  _name?: string;
+  private _name?: string;
 
-  _uri?: string;
+  private _uri?: string;
 
   private _unparsed?: string;
 
@@ -93,12 +93,19 @@ export class External {
     return this._unparsed;
   }
 
+  get isPublic(): boolean {
+    return EDtdExternalType.public == this.type;
+  }
+
+  get isPrivate(): boolean {
+    return EDtdExternalType.private == this.type;
+  }
+
   get isParsed(): boolean {
     return !this._unparsed;
   }
 
-  constructor(extDecl: string[]) {
-    const parts = extDecl.slice(0);
+  constructor(parts: string[]) {
     const type = parts.shift();
     switch (type) {
       case 'PUBLIC':

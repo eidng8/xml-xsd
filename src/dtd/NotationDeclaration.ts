@@ -4,87 +4,45 @@
  * Author: eidng8
  */
 
-import { TEXTS } from '../translations/en';
-import { validateName } from '../utils/validators';
-import { External } from './External';
 import { EDtdExternalType } from '../types/dtd/DtdExternalType';
-import { splitDeclaration } from '..';
+import { validatePubIdLiteral } from '../utils/validators';
+import { External } from './External';
+import { Base } from './Base';
 
-export class NotationDeclaration {
+export class NotationDeclaration extends Base {
+  readonly external!: External;
+
   private readonly urlBase: string;
 
-  private readonly declaration: string;
-
-  private _name!: string;
-
-  private external!: External;
-
-  get name(): string {
-    return this._name;
-  }
-
-  get type(): EDtdExternalType {
-    return this.external.type!;
-  }
+  private readonly _id?: string;
 
   get id(): string | undefined {
-    return this.external.name;
-  }
-
-  get uri(): string | undefined {
-    return this.external.uri;
+    return this._id || this.external.name;
   }
 
   get url(): string | undefined {
-    return this.urlBase && this.external.uri
-      ? `${this.urlBase}/${this.external.uri}`
-      : this.external.uri;
+    return (
+      this.external &&
+      this.external.uri &&
+      this.urlBase &&
+      `${this.urlBase}/${this.external.uri}`
+    );
   }
 
-  get isPublic(): boolean {
-    return !!this.external && EDtdExternalType.public == this.external!.type;
-  }
-
-  get isPrivate(): boolean {
-    return !!this.external && EDtdExternalType.private == this.external!.type;
+  get isPublicId(): boolean {
+    return (
+      !this.external ||
+      (EDtdExternalType.public == this.external!.type && !this.external.uri)
+    );
   }
 
   constructor(declaration: string, urlBase = '') {
-    this.declaration = declaration;
-    const parts = splitDeclaration(declaration).slice(1);
-    if (!parts || parts.length < 2) {
-      throw new Error(TEXTS.errInvalidEntityDeclaration);
-    }
+    super(declaration);
     this.urlBase = urlBase;
-    this.parseName(parts);
-    this.parseValue(parts);
-  }
-
-  /**
-   * Will mutate `declaration`
-   * @param declaration
-   */
-  private parseName(declaration: string[]): void {
-    const name = declaration.shift()!;
-    this._name = validateName(name, this.declaration);
-  }
-
-  /**
-   * Will mutate `declaration`
-   * @param declaration
-   */
-  private parseValue(declaration: string[]): void {
-    switch (declaration[0]) {
-      case 'PUBLIC':
-      case 'SYSTEM':
-        this.parseExternal(declaration);
-        break;
-      default:
-        throw new Error(TEXTS.errInvalidDeclaration);
+    if (2 == this.parts.length && 'PUBLIC' == this.parts[0]) {
+      this._id = validatePubIdLiteral(this.parts[1]);
+      return;
     }
-  }
-
-  private parseExternal(declaration: string[]): void {
-    this.external = new External(declaration);
+    this.external = new External(this.parts);
   }
 }

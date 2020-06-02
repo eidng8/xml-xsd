@@ -4,6 +4,7 @@
  * Author: eidng8
  */
 
+export * from './types/dtd/DtdElementType';
 export * from './types/dtd/DtdExternalType';
 export * from './types/dtd/EntityDeclaration';
 export * from './types/dtd/EntityList';
@@ -23,6 +24,8 @@ export * from './translations/en';
 
 export * from './dtd/External';
 
+export * from './dtd/AttListDeclaration';
+export * from './dtd/ElementDeclaration';
 export * from './dtd/NotationDeclaration';
 export { default as EntityDeclaration } from './dtd/EntityDeclaration';
 export { default as DocType } from './xml/DocType';

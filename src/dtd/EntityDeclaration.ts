@@ -7,18 +7,14 @@
 import { IEntityDeclaration } from '../types/dtd/EntityDeclaration';
 import { IEntityList } from '../types/dtd/EntityList';
 import { EEntityState } from '../types/dtd/EntityState';
-import { EDtdExternalType } from '../types/dtd/DtdExternalType';
 import { validateEntityValue, validateName } from '../utils/validators';
-import { TEXTS } from '../translations/en';
 import { External } from './External';
-import { splitDeclaration } from '..';
+import { Base } from './Base';
 
-export default class EntityDeclaration implements IEntityDeclaration {
-  private readonly declaration: string;
-
+export default class EntityDeclaration extends Base
+  implements IEntityDeclaration {
+  private _external?: External;
   private readonly urlBase: string;
-
-  private _name!: string;
 
   /**
    * `false` for parameter entity, otherwise `true`.
@@ -29,38 +25,16 @@ export default class EntityDeclaration implements IEntityDeclaration {
 
   private _value?: string;
 
-  private external?: External;
-
   private subscribers = [] as [Function, Function][];
 
   private lastError?: Error;
-
-  get name(): string {
-    return this._name;
-  }
 
   get general(): boolean {
     return this._general;
   }
 
-  get type(): EDtdExternalType {
-    return (this.external && this.external.type) || EDtdExternalType.internal;
-  }
-
   get state(): EEntityState {
     return this._state;
-  }
-
-  get unparsed(): string | undefined {
-    return this.external && this.external.unparsed;
-  }
-
-  get id(): string | undefined {
-    return this.external && this.external.name;
-  }
-
-  get uri(): string | undefined {
-    return this.external && this.external.uri;
   }
 
   get value(): Promise<string> {
@@ -76,40 +50,30 @@ export default class EntityDeclaration implements IEntityDeclaration {
   }
 
   get isInternal(): boolean {
-    return undefined === this.external;
-  }
-
-  get isPublic(): boolean {
-    return !!this.external && EDtdExternalType.public == this.external!.type;
-  }
-
-  get isPrivate(): boolean {
-    return !!this.external && EDtdExternalType.private == this.external!.type;
+    return undefined === this._external;
   }
 
   get isExternal(): boolean {
-    return this.external !== undefined;
+    return this._external !== undefined;
   }
 
   get isParsed(): boolean {
-    return this.isInternal || this.external!.isParsed;
+    return this.isInternal || this._external!.isParsed;
   }
 
   get isParameter(): boolean {
     return !this._general;
   }
 
+  get external(): External | undefined {
+    return this._external;
+  }
+
   constructor(declaration: string, urlBase = '') {
-    this.declaration = declaration;
-    const parts = splitDeclaration(declaration).slice(1);
-    if (!parts || parts.length < 2) {
-      this._state = EEntityState.error;
-      throw new Error(TEXTS.errInvalidEntityDeclaration);
-    }
+    super(declaration);
     try {
       this.urlBase = urlBase;
-      this.parseName(parts);
-      this.parseValue(parts);
+      this.parseValue();
     } catch (e) {
       this._state = EEntityState.error;
       throw e;
@@ -123,31 +87,28 @@ export default class EntityDeclaration implements IEntityDeclaration {
 
   /**
    * Will mutate `declaration`
-   * @param declaration
    */
-  private parseName(declaration: string[]): void {
-    const name = declaration.shift()!;
+  protected parseName(): string {
+    const name = this.parts.shift()!;
     if ('%' == name) {
       this._general = false;
-      this._name = validateName(declaration.shift()!, this.declaration);
-    } else {
-      this._general = true;
-      this._name = validateName(name, this.declaration);
+      return validateName(this.parts.shift()!, this.declaration);
     }
+    this._general = true;
+    return validateName(name, this.declaration);
   }
 
   /**
    * Will mutate `declaration`
-   * @param declaration
    */
-  private parseValue(declaration: string[]): void {
-    switch (declaration[0]) {
+  private parseValue(): void {
+    switch (this.parts[0]) {
       case 'PUBLIC':
       case 'SYSTEM':
-        this.parseExternal(declaration);
+        this.parseExternal();
         break;
       default:
-        this.parseInternal(declaration[0]);
+        this.parseInternal(this.parts[0]);
     }
   }
 
@@ -156,11 +117,11 @@ export default class EntityDeclaration implements IEntityDeclaration {
     this._state = EEntityState.ready;
   }
 
-  private parseExternal(declaration: string[]): void {
-    this.external = new External(declaration);
-    if (this.external.isParsed) {
+  private parseExternal(): void {
+    this._external = new External(this.parts);
+    if (this._external.isParsed) {
       this._state = EEntityState.fetching;
-      this.external
+      this._external
         .fetch(this.urlBase)
         .then(res => {
           this._state = EEntityState.parsing;
@@ -175,7 +136,7 @@ export default class EntityDeclaration implements IEntityDeclaration {
           this.rejectSubscribers(err);
         });
     } else {
-      this._value = this.external.uri;
+      this._value = this._external.uri;
       this._state = EEntityState.ready;
     }
   }

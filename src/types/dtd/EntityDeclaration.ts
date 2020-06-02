@@ -6,25 +6,20 @@
 
 import { IEntityList } from '../dtd/EntityList';
 import { EEntityState } from './EntityState';
-import { EDtdExternalType } from './DtdExternalType';
+import { External } from '../../dtd/External';
 
 export interface IEntityDeclaration {
   readonly name: string;
-  readonly type: EDtdExternalType;
   readonly state: EEntityState;
+  readonly external?: External;
 
   /**
    * `false` for parameter entity, otherwise `true`.
    */
   readonly general: boolean;
-  readonly unparsed?: string;
   readonly value: Promise<string>;
-  readonly id?: string;
-  readonly uri?: string;
 
   readonly isInternal: boolean;
-  readonly isPublic: boolean;
-  readonly isPrivate: boolean;
   readonly isExternal: boolean;
   readonly isParsed: boolean;
   readonly isParameter: boolean;
