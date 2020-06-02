@@ -134,17 +134,9 @@ export default class DocType implements IDocType {
     }
   }
 
-  private parseMarkup(dec: string): void {
-    let matches = [] as string[];
-    let match: RegExpExecArray | null;
-    const regex = /'[^']+'|"[^"]+"|[^\s<>\/=]+=?/g;
-    while ((match = regex.exec(dec))) matches.push(match[0]);
-    if (!matches.length) return;
-    switch (matches.shift()) {
-      case '!ENTITY':
-        this.parseEntity(matches);
-        break;
-    }
+  private parseMarkup(declaration: string): void {
+    if (declaration.startsWith('<!ENTITY')) this.parseEntity(declaration);
+    else throw new Error(TEXTS.errInvalidDeclaration);
   }
 
   /**
@@ -171,7 +163,7 @@ export default class DocType implements IDocType {
    *
    * @param declaration
    */
-  private parseEntity(declaration: string[]): void {
+  private parseEntity(declaration: string): void {
     const entity = new EntityDeclaration(declaration, this.urlBase);
     if (entity.isParameter) this.dtd.entities.parameter[entity.name] = entity;
     else this.dtd.entities.general[entity.name] = entity;

@@ -8,6 +8,7 @@ import { TEXTS } from '../translations/en';
 import { validateName } from '../utils/validators';
 import { External } from './External';
 import { EDtdExternalType } from '../types/dtd/DtdExternalType';
+import { splitDeclaration } from '..';
 
 export class NotationDeclaration {
   private readonly urlBase: string;
@@ -48,18 +49,15 @@ export class NotationDeclaration {
     return !!this.external && EDtdExternalType.private == this.external!.type;
   }
 
-  constructor(declaration: string[], urlBase = '') {
-    this.declaration = `<${declaration.join(' ')}>`;
-    if (!declaration || declaration.length < 2) {
+  constructor(declaration: string, urlBase = '') {
+    this.declaration = declaration;
+    const parts = splitDeclaration(declaration).slice(1);
+    if (!parts || parts.length < 2) {
       throw new Error(TEXTS.errInvalidEntityDeclaration);
     }
-    try {
-      this.urlBase = urlBase;
-      this.parseName(declaration);
-      this.parseValue(declaration);
-    } catch (e) {
-      throw e;
-    }
+    this.urlBase = urlBase;
+    this.parseName(parts);
+    this.parseValue(parts);
   }
 
   /**

@@ -33,6 +33,7 @@ const charRef = '&#(?=\\d+;)[^&;]+;|&#x(?=[\\da-fA-F]+;)[^&;]+;';
 /**
  * https://www.w3.org/TR/REC-xml/#NT-Name
  * @param str
+ * @param context
  */
 export function validateName(str: string, context: string): string {
   if (XRegExp(`^${name}$`).test(str)) return str;

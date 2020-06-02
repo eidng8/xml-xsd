@@ -12,6 +12,15 @@ export function parseLiteral(literal: string): string {
   return literal;
 }
 
+export function splitDeclaration(markup: string) {
+  let match: RegExpExecArray | null;
+  let matches = [] as string[];
+  const regex = /'[^']+'|"[^"]+"|[^\s<>\/=]+/g;
+  while ((match = regex.exec(markup))) matches.push(match[0]);
+  if (!matches.length) throw new Error(TEXTS.errInvalidDeclaration);
+  return matches;
+}
+
 export function extractBlock(dtd: string, start = 0): [string, number] {
   let c = dtd[start];
   let nest = -1;
@@ -20,7 +29,7 @@ export function extractBlock(dtd: string, start = 0): [string, number] {
     if ('<' == c) nest++;
     else if ('>' == c) {
       if (0 == nest) {
-        return [dtd.substring(start, i), i];
+        return [dtd.substr(start, i + 1), i + 1];
       }
       nest--;
     }
@@ -34,24 +43,24 @@ export function extractMarkup(dtd: string, start = 0): [string, number] | null {
   while (start < dtd.length) {
     c = dtd[start++];
     if (-1 == p && ('%' == c || '&' == c)) {
-      const i = dtd.indexOf(';', start);
+      let i = dtd.indexOf(';', start);
       if (-1 == i) {
         throw new Error(TEXTS.errInvalidDeclaration);
       }
-      return [dtd.substring(start, i), i + 1];
+      return [dtd.substring(start - 1, ++i), i];
     } else if ('<' == c) {
       p = start;
       // conditional sections
       if ('!' == dtd[p] && '[' == dtd[p + 1]) {
-        const [block, e] = extractBlock('<' + dtd, p);
-        if (block.endsWith(']]')) {
+        const [block, e] = extractBlock(dtd, p - 1);
+        if (block.endsWith(']]>')) {
           start = e;
           // ignore CDATA
           if (block.startsWith('<![CDATA[')) {
             p = -1;
             continue;
           }
-          return [block.substr(1), start];
+          return [block, start];
         }
         throw new Error(TEXTS.errInvalidDeclaration);
       }
@@ -75,7 +84,7 @@ export function extractMarkup(dtd: string, start = 0): [string, number] | null {
         }
         throw new Error(TEXTS.errInvalidDeclaration);
       }
-      return [dtd.substring(p, start - 1), start];
+      return [dtd.substring(p - 1, start), start];
     }
   }
   return null;

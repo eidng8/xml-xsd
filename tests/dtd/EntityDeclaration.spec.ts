@@ -19,14 +19,8 @@ describe('Parameter entity', test(true));
 describe('Unparsed entities', () => {
   it('should accept public external', async () => {
     expect.assertions(13);
-    const declaration = [
-      'name',
-      'PUBLIC',
-      '"public_ID"',
-      "'URI'",
-      'NDATA',
-      'unp_name',
-    ];
+    const declaration =
+      '<!ENTITY name PUBLIC "public_ID" \'URI\' NDATA unp_name>';
     const ent = new EntityDeclaration(declaration);
     expect(ent.type).toBe(EDtdExternalType.public);
     expect(ent.name).toBe('name');
@@ -45,7 +39,7 @@ describe('Unparsed entities', () => {
 
   it('should accept private external', async () => {
     expect.assertions(13);
-    const declaration = ['name', 'SYSTEM', "'URI'", 'NDATA', 'unp_name'];
+    const declaration = "<!ENTITY name SYSTEM 'URI' NDATA unp_name>";
     const ent = new EntityDeclaration(declaration);
     expect(ent.type).toBe(EDtdExternalType.private);
     expect(ent.name).toBe('name');
@@ -66,14 +60,14 @@ describe('Unparsed entities', () => {
 describe('Exceptions', () => {
   it('should throw if not enough composition parts', () => {
     expect.assertions(1);
-    expect(() => new EntityDeclaration([])).toThrow(
-      TEXTS.errInvalidEntityDeclaration,
+    expect(() => new EntityDeclaration('')).toThrow(
+      TEXTS.errInvalidDeclaration,
     );
   });
 
   it('should throw on invalid unparsed entity', () => {
     expect.assertions(1);
-    const declaration = ['name', 'PUBLIC', '"public_ID"', "'URI'", 'unp_name'];
+    const declaration = '<!ENTITY name PUBLIC "public_ID" "URI" unp_name>';
     expect(() => new EntityDeclaration(declaration)).toThrow(
       TEXTS.errInvalidUnparsedEntityDeclaration,
     );
@@ -97,7 +91,7 @@ describe('Value queue', () => {
         done();
       });
     });
-    const declaration = ['name', 'PUBLIC', '"public_ID"', "'URI'"];
+    const declaration = '<!ENTITY name PUBLIC "public_ID" "URI">';
     const ent = new EntityDeclaration(declaration);
   });
 
@@ -114,7 +108,7 @@ describe('Value queue', () => {
         ent.value.then(() => fail('Should be rejected')).catch(() => done());
       });
     });
-    const declaration = ['name', 'PUBLIC', '"public_ID"', "'URI'"];
+    const declaration = '<!ENTITY name PUBLIC "public_ID" "URI">';
     const ent = new EntityDeclaration(declaration);
   });
 });
@@ -123,8 +117,8 @@ function test(parameter) {
   return () => {
     it('should accept internal entity', async () => {
       expect.assertions(14);
-      const declaration = ['name', '"value"'];
-      if (parameter) declaration.unshift('%');
+      let declaration = '<!ENTITY name "value">';
+      if (parameter) declaration = '<!ENTITY % name "value">';
       const ent = new EntityDeclaration(declaration);
       expect(ent.type).toBe(EDtdExternalType.internal);
       expect(ent.name).toBe('name');
@@ -166,8 +160,8 @@ function test(parameter) {
           done();
         });
       });
-      const declaration = ['name', 'PUBLIC', '"public_ID"', "'URI'"];
-      if (parameter) declaration.unshift('%');
+      let declaration = '<!ENTITY name PUBLIC "public_ID" "URI">';
+      if (parameter) declaration = '<!ENTITY % name PUBLIC "public_ID" "URI">';
       const ent = new EntityDeclaration(declaration);
       expect(ent.state).toBe(EEntityState.fetching);
     });
@@ -195,8 +189,8 @@ function test(parameter) {
           done();
         });
       });
-      const declaration = ['name', 'SYSTEM', "'URI'"];
-      if (parameter) declaration.unshift('%');
+      let declaration = "<!ENTITY name SYSTEM 'URI'>";
+      if (parameter) declaration = "<!ENTITY % name SYSTEM 'URI'>";
       const ent = new EntityDeclaration(declaration);
     });
   };

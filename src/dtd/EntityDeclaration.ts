@@ -11,6 +11,7 @@ import { EDtdExternalType } from '../types/dtd/DtdExternalType';
 import { validateEntityValue, validateName } from '../utils/validators';
 import { TEXTS } from '../translations/en';
 import { External } from './External';
+import { splitDeclaration } from '..';
 
 export default class EntityDeclaration implements IEntityDeclaration {
   private readonly declaration: string;
@@ -98,16 +99,17 @@ export default class EntityDeclaration implements IEntityDeclaration {
     return !this._general;
   }
 
-  constructor(declaration: string[], urlBase = '') {
-    if (!declaration || declaration.length < 2) {
+  constructor(declaration: string, urlBase = '') {
+    this.declaration = declaration;
+    const parts = splitDeclaration(declaration).slice(1);
+    if (!parts || parts.length < 2) {
       this._state = EEntityState.error;
       throw new Error(TEXTS.errInvalidEntityDeclaration);
     }
-    this.declaration = `<${declaration.join(' ')}>`;
     try {
       this.urlBase = urlBase;
-      this.parseName(declaration);
-      this.parseValue(declaration);
+      this.parseName(parts);
+      this.parseValue(parts);
     } catch (e) {
       this._state = EEntityState.error;
       throw e;
