@@ -4,6 +4,7 @@
  * Author: eidng8
  */
 
+export * from './types/dtd/DtdAttributeType';
 export * from './types/dtd/DtdElementType';
 export * from './types/dtd/DtdExternalType';
 export * from './types/dtd/EntityDeclaration';
