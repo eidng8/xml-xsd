@@ -16,7 +16,7 @@ export * from './types/xml/doctype';
 export * from './types/xml/document';
 export * from './types/parse';
 
-export * from './utils/dtd';
+export * from './utils/markup';
 export * from './utils/timer';
 export * from './utils/type-guards';
 export * from './utils/validators';

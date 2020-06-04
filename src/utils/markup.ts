@@ -12,12 +12,11 @@ export function parseLiteral(literal: string): string {
   return literal;
 }
 
-export function splitDeclaration(markup: string) {
+export function decompose(markup: string) {
   let match: RegExpExecArray | null;
   let matches = [] as string[];
   const regex = /'[^']+'|"[^"]+"|[^\s<>\/=]+/g;
   while ((match = regex.exec(markup))) matches.push(match[0]);
-  if (!matches.length) throw new Error(TEXTS.errInvalidDeclaration);
   return matches;
 }
 

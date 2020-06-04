@@ -4,23 +4,24 @@
  * Author: eidng8
  */
 
-import { Base } from './Base';
+import { DeclarationBase } from '../mixins/DeclarationBase';
 import { EDtdAttributeType } from '../types/dtd/DtdAttributeType';
 import { TEXTS } from '..';
 
-export class AttListDeclaration extends Base {
-  readonly element: string;
+export class AttListDeclaration extends DeclarationBase {
+  element!: string;
 
-  readonly type: EDtdAttributeType;
+  type!: EDtdAttributeType;
 
-  readonly value?: string;
+  value?: string;
 
-  constructor(declaration: string) {
-    super(declaration);
+  parse(): AttListDeclaration {
+    super.parse();
     this.element = this.name;
-    this._name = this.parseName();
+    this.parseName();
     this.type = this.parseType();
     this.value = this.parts.shift();
+    return this;
   }
 
   private parseType(): EDtdAttributeType {

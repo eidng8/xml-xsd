@@ -10,7 +10,7 @@ describe('Declaration', () => {
   it('should accept public ID', () => {
     expect.assertions(4);
     const declaration = '<!NOTATION name PUBLIC "public_ID">';
-    const ent = new NotationDeclaration(declaration);
+    const ent = new NotationDeclaration(declaration).parse();
     expect(ent.isPublicId).toBe(true);
     expect(ent.name).toBe('name');
     expect(ent.id).toBe('public_ID');
@@ -21,6 +21,7 @@ describe('Declaration', () => {
     expect.assertions(8);
     const declaration = '<!NOTATION name PUBLIC\t"public_ID" \'URI\'>';
     const ent = new NotationDeclaration(declaration, 'http://example.com/base');
+    ent.parse();
     expect(ent.isPublicId).toBe(false);
     expect(ent.external!.type).toBe(EDtdExternalType.public);
     expect(ent.name).toBe('name');
@@ -35,6 +36,7 @@ describe('Declaration', () => {
     expect.assertions(7);
     const declaration = '<!NOTATION name SYSTEM "URI">';
     const ent = new NotationDeclaration(declaration);
+    ent.parse();
     expect(ent.isPublicId).toBe(false);
     expect(ent.external!.type).toBe(EDtdExternalType.private);
     expect(ent.name).toBe('name');
@@ -48,7 +50,7 @@ describe('Declaration', () => {
 describe('Exceptions', () => {
   it('should throw if not enough composition parts', () => {
     expect.assertions(1);
-    expect(() => new NotationDeclaration('')).toThrow(
+    expect(() => new NotationDeclaration('').parse()).toThrow(
       TEXTS.errInvalidDeclaration,
     );
   });

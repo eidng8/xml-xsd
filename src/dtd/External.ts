@@ -10,25 +10,32 @@ import {
   validatePubIdLiteral,
   validateSystemIdentifier,
 } from '../utils/validators';
+import { EEntityState } from '..';
 
 export class External {
   private _type?: EDtdExternalType;
 
   private _name?: string;
 
-  private _uri?: string;
+  private _uri!: string;
 
   private _unparsed?: string;
 
+  private _state = EEntityState.unknown;
+
   get type(): EDtdExternalType | undefined {
     return this._type;
+  }
+
+  get state(): EEntityState {
+    return this._state;
   }
 
   get name(): string | undefined {
     return this._name;
   }
 
-  get uri(): string | undefined {
+  get uri(): string {
     return this._uri;
   }
 
@@ -102,7 +109,7 @@ export class External {
   }
 
   get isParsed(): boolean {
-    return !this._unparsed;
+    return undefined === this._unparsed;
   }
 
   constructor(parts: string[]) {
@@ -124,8 +131,11 @@ export class External {
    * @param urlBase No trailing slash.
    */
   async fetch(urlBase?: string): Promise<string> {
-    if (!this.uri) return Promise.resolve('');
-    return axios.get(this.uri, { baseURL: urlBase }).then(res => res.data);
+    this._state = EEntityState.fetching;
+    return axios.get(this.uri, { baseURL: urlBase }).then(res => {
+      this._state = EEntityState.ready;
+      return res && res.data;
+    });
   }
 
   private parsePublic(parts: string[]): void {

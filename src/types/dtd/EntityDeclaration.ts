@@ -17,7 +17,7 @@ export interface IEntityDeclaration {
    * `false` for parameter entity, otherwise `true`.
    */
   readonly general: boolean;
-  readonly value: Promise<string>;
+  readonly value: Promise<string | undefined>;
 
   readonly isInternal: boolean;
   readonly isExternal: boolean;

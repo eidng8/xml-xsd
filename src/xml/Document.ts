@@ -10,7 +10,7 @@ import { IDocType } from '../types/xml/doctype';
 import { IDocument } from '../types/xml/document';
 import DocType from './DocType';
 import Declaration from './Declaration';
-import { extractBlock } from '../utils/dtd';
+import { extractBlock } from '../utils/markup';
 
 export default class Document implements IDocument {
   /**

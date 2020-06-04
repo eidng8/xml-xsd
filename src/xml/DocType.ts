@@ -12,7 +12,7 @@ import { IDocType } from '../types/xml/doctype';
 import { IDocument } from '../types/xml/document';
 import { TEXTS } from '../translations/en';
 import EntityDeclaration from '../dtd/EntityDeclaration';
-import { extractMarkup } from '../utils/dtd';
+import { decompose, extractMarkup } from '../utils/markup';
 
 /**
  * Due to the synchronous nature of `sax.js`, externals are not supported.
@@ -76,7 +76,7 @@ export default class DocType implements IDocType {
       throw new Error(TEXTS.errInvalidIntSubset);
     } else {
       await this.parseRoot(dtd.substring(0, bp));
-      this.parseInternal(dtd.substring(bp + 1, dtd.length - 2));
+      await this.parseInternal(dtd.substring(bp + 1, dtd.length - 2));
     }
   }
 
@@ -100,34 +100,30 @@ export default class DocType implements IDocType {
    * @param dtd
    */
   private async parseRoot(dtd: string): Promise<void> {
-    let match: RegExpExecArray | null;
-    const buf = [] as string[];
-    const reg = /'[^']+'|"[^"]+"|[^\s<>\/=]+=?/g;
-    while ((match = reg.exec(dtd))) buf.push(match[0]);
-    if (!buf.length) throw new Error(TEXTS.errInvalidDocType);
+    const buf = decompose(dtd);
     this.dtd.root = buf.shift()!;
     await this.parseExternal(buf);
   }
 
-  private async parseExternal(extDecl: string[]): Promise<void> {
-    if (!extDecl.length) return;
-    const ext = new External(extDecl);
-    const markup = await ext.fetch(this.urlBase);
+  private async parseExternal(externalDecl: string[]): Promise<void> {
+    if (!externalDecl.length) return;
+    const markup = await new External(externalDecl).fetch(this.urlBase);
     const external = new DocType(this.urlBase);
     await external.parseInternal(markup);
     Object.assign(this.dtd.entities.general, external.dtd.entities.general);
+    Object.assign(this.dtd.entities.parameter, external.dtd.entities.parameter);
   }
 
-  private parseInternal(dtd: string): void {
+  private async parseInternal(dtd: string): Promise<void> {
     let idx = 0;
     let markup = '';
     let match: [string, number] | null;
     while ((match = extractMarkup(dtd, idx))) {
       [markup, idx] = match;
       if ('&' == markup[0]) {
-        this.expandEntity(markup.substr(1, markup.length - 2));
+        await this.expandEntity(markup.substr(1, markup.length - 2));
       } else if ('%' == markup[0]) {
-        this.expandParameter(markup.substr(1, markup.length - 2));
+        await this.expandParameter(markup.substr(1, markup.length - 2));
       } else {
         this.parseMarkup(markup);
       }
@@ -164,20 +160,20 @@ export default class DocType implements IDocType {
    * @param declaration
    */
   private parseEntity(declaration: string): void {
-    const entity = new EntityDeclaration(declaration, this.urlBase);
+    const entity = new EntityDeclaration(declaration, this.urlBase).parse();
     if (entity.isParameter) this.dtd.entities.parameter[entity.name] = entity;
     else this.dtd.entities.general[entity.name] = entity;
   }
 
-  private expandEntity(entity: string): void {
+  private async expandEntity(entity: string): Promise<void> {
     const ent = this.getEntity(entity);
-    if (!ent) throw new Error(TEXTS.errInvalidEntity);
-    ent.value.then(v => this.parseInternal(v));
+    const v = await ent.value;
+    if (v) await this.parseInternal(v);
   }
 
-  private expandParameter(entity: string): void {
+  private async expandParameter(entity: string): Promise<void> {
     const ent = this.dtd.entities.parameter[entity];
-    if (!ent) throw new Error(TEXTS.errInvalidEntity);
-    ent.value.then(v => this.parseInternal(v));
+    const v = await ent.value;
+    if (v) await this.parseInternal(v);
   }
 }

@@ -6,9 +6,9 @@
 
 import { EDtdElementType } from '../types/dtd/DtdElementType';
 import { TEXTS } from '../translations/en';
-import { Base } from './Base';
+import { DeclarationBase } from '../mixins/DeclarationBase';
 
-export class ElementDeclaration extends Base {
+export class ElementDeclaration extends DeclarationBase {
   private _type!: EDtdElementType;
 
   private _content?: string;
@@ -21,9 +21,10 @@ export class ElementDeclaration extends Base {
     return this._content;
   }
 
-  constructor(declaration: string) {
-    super(declaration);
+  parse(): ElementDeclaration {
+    super.parse();
     this.parseContent();
+    return this;
   }
 
   private parseContent(): void {

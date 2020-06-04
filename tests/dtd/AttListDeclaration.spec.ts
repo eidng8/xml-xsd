@@ -5,7 +5,7 @@ describe('Basics', () => {
     expect.assertions(4);
     const att = new AttListDeclaration(
       '<!ATTLIST image height CDATA #REQUIRED>',
-    );
+    ).parse();
     expect(att.element).toBe('image');
     expect(att.name).toBe('height');
     expect(att.type).toBe(EDtdAttributeType.cdata);
