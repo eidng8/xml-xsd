@@ -8,7 +8,7 @@ import { TEXTS } from '../translations/en';
 import { validateName } from '../utils/validators';
 import { decompose } from '../utils/markup';
 
-export abstract class DeclarationBase {
+export class DeclarationBase implements IDeclarationBase {
   readonly declaration: string;
 
   protected parts!: string[];
@@ -43,3 +43,15 @@ export abstract class DeclarationBase {
     this._name = validateName(this.parts.shift()!, this.declaration);
   }
 }
+
+export interface IDeclarationBase {
+  readonly declaration: string;
+
+  readonly name: string;
+
+  parse(): IDeclarationBase;
+}
+
+export type DeclarationConstructor<T extends IDeclarationBase> = new (
+  ...args: any[]
+) => T;

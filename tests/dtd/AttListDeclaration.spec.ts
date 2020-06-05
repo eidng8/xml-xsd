@@ -130,7 +130,7 @@ describe('Basics', () => {
     expect(att.isRequired).toBe(true);
     expect(att.value).toBeUndefined();
     expect(att.enumValues).toEqual(['xml', 'vrml']);
-    expect(att.pattern).toBeUndefined();
+    expect(att.pattern).toBe('xml|vrml');
   });
 
   it('should parse enumerated type', () => {

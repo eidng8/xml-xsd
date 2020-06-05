@@ -4,17 +4,21 @@
  * Author: eidng8
  */
 
-import { DeclarationBase } from './DeclarationBase';
-import { validateEntityValue } from '..';
+import { validateEntityValue } from '../utils/validators';
+import { DeclarationBase, DeclarationConstructor } from './DeclarationBase';
 
-export class HasValue extends DeclarationBase {
-  protected _value?: string;
+export function HasValue<T extends DeclarationConstructor<DeclarationBase>>(
+  Base: T,
+) {
+  return class extends Base {
+    protected _value?: string;
 
-  get value(): string | undefined {
-    return this._value;
-  }
+    get value(): string | undefined {
+      return this._value;
+    }
 
-  protected parseValue(): void {
-    this._value = validateEntityValue(this.parts.shift()!);
-  }
+    protected parseValue(): void {
+      this._value = validateEntityValue(this.parts.shift()!);
+    }
+  };
 }

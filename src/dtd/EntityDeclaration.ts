@@ -9,8 +9,9 @@ import { IEntityList } from '../types/dtd/EntityList';
 import { validateEntityValue, validateName } from '../utils/validators';
 import { HasExternal } from '../mixins/HasExternal';
 import { EEntityState } from '..';
+import { DeclarationBase } from '../mixins/DeclarationBase';
 
-export default class EntityDeclaration extends HasExternal
+export default class EntityDeclaration extends HasExternal(DeclarationBase)
   implements IEntityDeclaration {
   /**
    * `false` for parameter entity, otherwise `true`.

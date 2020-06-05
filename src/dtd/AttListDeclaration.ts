@@ -5,8 +5,9 @@
  */
 
 import { EDtdAttributeType } from '../types/dtd/DtdAttributeType';
-import { TEXTS } from '../translations/en';
 import { HasValue } from '../mixins/HasValue';
+import { DeclarationBase } from '../mixins/DeclarationBase';
+import { HasEnumerated } from '../mixins/HasEnumerated';
 
 const TYPES = {
   CDATA: EDtdAttributeType.cdata,
@@ -20,14 +21,12 @@ const TYPES = {
   NMTOKENS: EDtdAttributeType.nmtokens,
 };
 
-export class AttListDeclaration extends HasValue {
+export class AttListDeclaration extends HasEnumerated(
+  HasValue(DeclarationBase),
+) {
   private _element!: string;
 
   private _type!: EDtdAttributeType;
-
-  private _pattern?: string;
-
-  private _enumValues?: string[];
 
   private _required: boolean = false;
 
@@ -37,14 +36,6 @@ export class AttListDeclaration extends HasValue {
 
   get element(): string {
     return this._element;
-  }
-
-  get pattern(): string | undefined {
-    return this._pattern;
-  }
-
-  get enumValues(): string[] | undefined {
-    return this._enumValues;
   }
 
   get isRequired(): boolean {
@@ -61,22 +52,16 @@ export class AttListDeclaration extends HasValue {
   }
 
   private parseType(): void {
-    const type = this.parts.shift()!;
-    this._type = TYPES[type];
-    if (EDtdAttributeType.notation == this._type) this.parseNotations();
-    else if (!this._type) this.parseEnumerated(type);
-  }
-
-  private parseEnumerated(type: string): void {
-    if ('(' != type[0]) throw new Error(TEXTS.errInvalidDeclaration);
-    this._pattern = type.substr(1, type.length - 2);
-    this._enumValues = this._pattern.split('|');
-    this._type = EDtdAttributeType.enumerated;
-  }
-
-  private parseNotations(): void {
-    const values = this.parts.shift()!;
-    this._enumValues = values.substr(1, values.length - 2).split('|');
+    this._type = TYPES[this.parts[0]];
+    if (EDtdAttributeType.notation == this._type) {
+      this.parts.shift();
+      this.parseEnumerated();
+    } else if (!this._type) {
+      this.parseEnumerated();
+      this._type = EDtdAttributeType.enumerated;
+    } else {
+      this.parts.shift();
+    }
   }
 
   private parseDefault(): void {
