@@ -5,11 +5,10 @@
  */
 
 import { IEntityDeclaration } from '../types/dtd/EntityDeclaration';
-import { IEntityList } from '../types/dtd/EntityList';
+import { EEntityState } from '../types/dtd/EntityState';
 import { validateEntityValue, validateName } from '../utils/validators';
-import { HasExternal } from '../mixins/HasExternal';
-import { EEntityState } from '..';
 import { DeclarationBase } from '../mixins/DeclarationBase';
+import { HasExternal } from '../mixins/HasExternal';
 
 export default class EntityDeclaration extends HasExternal(DeclarationBase)
   implements IEntityDeclaration {
@@ -22,7 +21,7 @@ export default class EntityDeclaration extends HasExternal(DeclarationBase)
     return this._general;
   }
 
-  public get value(): Promise<string | undefined> {
+  get value(): Promise<string | undefined> {
     if (this.isInternal) return Promise.resolve(this._value);
     return super.value;
   }
@@ -43,12 +42,12 @@ export default class EntityDeclaration extends HasExternal(DeclarationBase)
     return !this._general;
   }
 
-  expand(): IEntityList {
-    // TODO
-    throw new Error('Method not implemented.');
+  constructor(declaration: string, urlBase: string) {
+    // @ts-ignore: TS2554
+    super(declaration, urlBase);
   }
 
-  public parse(): EntityDeclaration {
+  parse(): EntityDeclaration {
     super.parse();
     if ('PUBLIC' == this.parts[0] || 'SYSTEM' == this.parts[0]) {
       this.parseExternal();

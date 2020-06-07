@@ -161,7 +161,6 @@ export class External {
   }
 
   private parseUnparsed(declaration: string[]): void {
-    if (!declaration.length) return;
     if ('NDATA' == declaration[0]) {
       this._unparsed = declaration[1];
       // TODO

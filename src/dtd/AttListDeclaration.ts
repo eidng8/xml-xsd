@@ -5,9 +5,9 @@
  */
 
 import { EDtdAttributeType } from '../types/dtd/DtdAttributeType';
-import { HasValue } from '../mixins/HasValue';
 import { DeclarationBase } from '../mixins/DeclarationBase';
 import { HasEnumerated } from '../mixins/HasEnumerated';
+import { HasValue } from '../mixins/HasValue';
 
 const TYPES = {
   CDATA: EDtdAttributeType.cdata,

@@ -25,7 +25,7 @@ export function HasExternal<T extends DeclarationConstructor<DeclarationBase>>(
 
     protected _lastError?: Error;
 
-    protected subscribers = [] as [Function, Function][];
+    protected _subscribers = [] as [Function, Function][];
 
     get state(): EEntityState {
       return this._state;
@@ -86,7 +86,7 @@ export function HasExternal<T extends DeclarationConstructor<DeclarationBase>>(
       }
       this.fetch();
       return new Promise<string>((resolve, reject) =>
-        this.subscribers.push([resolve, reject]),
+        this._subscribers.push([resolve, reject]),
       );
     }
 
@@ -107,14 +107,14 @@ export function HasExternal<T extends DeclarationConstructor<DeclarationBase>>(
     }
 
     protected resolveSubscribers(): void {
-      while (this.subscribers.length) {
-        (this.subscribers.shift() as Function[])[0](this._value);
+      while (this._subscribers.length) {
+        (this._subscribers.shift() as Function[])[0](this._value);
       }
     }
 
     protected rejectSubscribers(err: Error) {
-      while (this.subscribers.length) {
-        (this.subscribers.shift() as Function[])[1](err);
+      while (this._subscribers.length) {
+        (this._subscribers.shift() as Function[])[1](err);
       }
     }
   };

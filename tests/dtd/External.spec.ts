@@ -4,26 +4,33 @@
  * Author: eidng8
  */
 
-import { EDtdExternalType, External, TEXTS } from '../../src';
+import moxios from 'moxios';
+import { EDtdExternalType, EEntityState, External, TEXTS } from '../../src';
 
 describe('External DTD', () => {
   it('handles private DTD', () => {
-    expect.assertions(6);
+    expect.assertions(9);
     const dtd = new External(['SYSTEM', '"external.dtd"']);
     expect(dtd.type).toBe(EDtdExternalType.private);
     expect(dtd.name).toBeUndefined();
     expect(dtd.uri).toBe('external.dtd');
+    expect(dtd.owner).toBeUndefined();
+    expect(dtd.description).toBeUndefined();
+    expect(dtd.language).toBeUndefined();
     expect(dtd.isISO).toBe(false);
     expect(dtd.isApproved).toBe(false);
     expect(dtd.isUnapproved).toBe(false);
   });
 
   it('handles public DTD', () => {
-    expect.assertions(6);
+    expect.assertions(9);
     const dtd = new External(['PUBLIC', '"name"', "'external.dtd'"]);
     expect(dtd.type).toBe(EDtdExternalType.public);
     expect(dtd.name).toBe('name');
     expect(dtd.uri).toBe('external.dtd');
+    expect(dtd.owner).toBeUndefined();
+    expect(dtd.description).toBeUndefined();
+    expect(dtd.language).toBeUndefined();
     expect(dtd.isISO).toBe(false);
     expect(dtd.isApproved).toBe(false);
     expect(dtd.isUnapproved).toBe(false);
@@ -67,6 +74,29 @@ describe('External DTD', () => {
     expect(dtd.owner).toBe('W3C');
     expect(dtd.description).toBe('DTD HTML 4.0 Transitional');
     expect(dtd.language).toBe('EN');
+  });
+
+  it('fetches remote content', done => {
+    expect.assertions(5);
+    moxios.install();
+    moxios.wait(() => {
+      const request = moxios.requests.mostRecent();
+      expect(request.url).toBe('external.dtd');
+      expect(request.config.baseURL).toBe('http://example.com/base');
+      request.respondWith({ response: 'abc' }).then(res => {
+        expect(res.data).toBe('abc');
+        expect(external.state).toBe(EEntityState.ready);
+        moxios.uninstall();
+        done();
+      });
+    });
+    const external = new External([
+      'PUBLIC',
+      '"-//W3C//DTD HTML 4.0 Transitional//EN"',
+      '"external.dtd"',
+    ]);
+    external.fetch('http://example.com/base');
+    expect(external.state).toBe(EEntityState.fetching);
   });
 });
 

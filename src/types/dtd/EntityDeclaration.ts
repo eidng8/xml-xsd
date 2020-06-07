@@ -4,7 +4,6 @@
  * Author: eidng8
  */
 
-import { IEntityList } from '../dtd/EntityList';
 import { EEntityState } from './EntityState';
 import { External } from '../../dtd/External';
 
@@ -23,6 +22,4 @@ export interface IEntityDeclaration {
   readonly isExternal: boolean;
   readonly isParsed: boolean;
   readonly isParameter: boolean;
-
-  expand(): IEntityList;
 }
