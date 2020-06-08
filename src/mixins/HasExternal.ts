@@ -8,6 +8,7 @@ import { EEntityState } from '../types/dtd/EntityState';
 import { External } from '../dtd/External';
 import { validatePubIdLiteral } from '../utils/validators';
 import { DeclarationBase, DeclarationConstructor } from './DeclarationBase';
+import { InvalidExternalID } from '../exceptions/InvalidExternalID';
 
 export function HasExternal<T extends DeclarationConstructor<DeclarationBase>>(
   Base: T,
@@ -72,10 +73,15 @@ export function HasExternal<T extends DeclarationConstructor<DeclarationBase>>(
     protected parseExternal(): void {
       if (2 == this.parts.length && 'PUBLIC' == this.parts[0]) {
         this.parts.shift();
-        this._id = validatePubIdLiteral(this.parts.shift()!);
+        this._id = validatePubIdLiteral(this.parts.shift()!, this.declaration);
       }
       if (undefined === this._id) {
-        this._external = new External(this.parts);
+        const input = this.parts.join(' ');
+        try {
+          this._external = new External(this.parts);
+        } catch (e) {
+          this.throwError(InvalidExternalID, input);
+        }
       }
     }
 

@@ -4,7 +4,11 @@
  * Author: eidng8
  */
 
-import { EDtdExternalType, NotationDeclaration, TEXTS } from '../../src';
+import {
+  DeclarationException,
+  EDtdExternalType,
+  NotationDeclaration,
+} from '../../src';
 
 describe('Declaration', () => {
   it('should accept public ID', () => {
@@ -20,6 +24,7 @@ describe('Declaration', () => {
   it('should accept public external', () => {
     expect.assertions(8);
     const declaration = '<!NOTATION name PUBLIC\t"public_ID" \'URI\'>';
+    // @ts-ignore: TS2554
     const ent = new NotationDeclaration(declaration, 'http://example.com/base');
     ent.parse();
     expect(ent.isPublicId).toBe(false);
@@ -51,7 +56,7 @@ describe('Exceptions', () => {
   it('should throw if not enough composition parts', () => {
     expect.assertions(1);
     expect(() => new NotationDeclaration('').parse()).toThrow(
-      TEXTS.errInvalidDeclaration,
+      DeclarationException,
     );
   });
 });

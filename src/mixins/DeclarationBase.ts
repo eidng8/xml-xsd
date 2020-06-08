@@ -4,7 +4,10 @@
  * Author: eidng8
  */
 
-import { TEXTS } from '../translations/en';
+import {
+  DeclarationException,
+  ExceptionConstructor,
+} from '../exceptions/DeclarationException';
 import { validateName } from '../utils/validators';
 import { decompose } from '../utils/markup';
 
@@ -22,7 +25,7 @@ export class DeclarationBase implements IDeclarationBase {
   parse(): DeclarationBase {
     this.parts = this.decompose();
     if (!this.parts || this.parts.length < 2) {
-      throw new Error(TEXTS.errInvalidDeclaration);
+      this.throwError(DeclarationException, this.parts.join(' '));
     }
     this.parseName();
     return this;
@@ -41,6 +44,15 @@ export class DeclarationBase implements IDeclarationBase {
    */
   protected parseName(): void {
     this._name = validateName(this.parts.shift()!, this.declaration);
+  }
+
+  protected throwError(
+    error: ExceptionConstructor,
+    input: string,
+    message?: string,
+    context?: string,
+  ): void {
+    throw new error(input, context || this.declaration, message);
   }
 }
 

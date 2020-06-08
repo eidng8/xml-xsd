@@ -172,6 +172,7 @@ describe('extractMarkup', () => {
   it('should ignore comment', function () {
     expect.assertions(1);
     expect(extractMarkup('<!--a-->%abc;')).toEqual(['%abc;', 13]);
+    expect(extractMarkup('<!--a <a@b.com>-->%abc;')).toEqual(['%abc;', 23]);
   });
 
   it('should ignore process instruction', function () {
@@ -186,8 +187,8 @@ describe('extractMarkup', () => {
 
   it('should throw on invalid entity usage', function () {
     expect.assertions(2);
-    expect(() => extractMarkup('&abc')).toThrow(TEXTS.errInvalidDeclaration);
-    expect(() => extractMarkup('%abc')).toThrow(TEXTS.errInvalidDeclaration);
+    expect(() => extractMarkup('&abc')).toThrow(TEXTS.errInvalidEntity);
+    expect(() => extractMarkup('%abc')).toThrow(TEXTS.errInvalidEntity);
   });
 
   it('should throw on invalid CDATA', function () {

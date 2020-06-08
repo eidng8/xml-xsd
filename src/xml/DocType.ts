@@ -10,9 +10,11 @@ import { IEntityDeclaration } from '../types/dtd/EntityDeclaration';
 import { IEntityList } from '../types/dtd/EntityList';
 import { IDocType } from '../types/xml/doctype';
 import { IDocument } from '../types/xml/document';
-import { TEXTS } from '../translations/en';
 import EntityDeclaration from '../dtd/EntityDeclaration';
 import { decompose, extractMarkup } from '../utils/markup';
+import { InvalidExternalID } from '../exceptions/InvalidExternalID';
+import { DeclarationException } from '../exceptions/DeclarationException';
+import { InvalidIntSubset } from '../exceptions/InvalidIntSubset';
 
 /**
  * Due to the synchronous nature of `sax.js`, externals are not supported.
@@ -71,12 +73,23 @@ export default class DocType implements IDocType {
   private async parseDtd(dtd: string): Promise<void> {
     const bp = dtd.indexOf('[');
     if (bp < 0) {
-      await this.parseRoot(dtd);
+      try {
+        await this.parseRoot(dtd);
+      } catch (e) {
+        throw new DeclarationException(e.input, e.context, e.message);
+      }
     } else if (']' != dtd[dtd.length - 1]) {
-      throw new Error(TEXTS.errInvalidIntSubset);
+      throw new InvalidIntSubset(
+        dtd.length > 20 ? dtd.substr(0, 20) + '...' : dtd,
+        dtd,
+      );
     } else {
-      await this.parseRoot(dtd.substring(0, bp));
-      await this.parseInternal(dtd.substring(bp + 1, dtd.length - 2));
+      try {
+        await this.parseRoot(dtd.substring(0, bp));
+        await this.parseInternal(dtd.substring(bp + 1, dtd.length - 2));
+      } catch (e) {
+        throw new DeclarationException(e.input, e.context, e.message);
+      }
     }
   }
 
@@ -107,11 +120,18 @@ export default class DocType implements IDocType {
 
   private async parseExternal(externalDecl: string[]): Promise<void> {
     if (!externalDecl.length) return;
-    const markup = await new External(externalDecl).fetch(this.urlBase);
-    const external = new DocType(this.urlBase);
-    await external.parseInternal(markup);
-    Object.assign(this.dtd.entities.general, external.dtd.entities.general);
-    Object.assign(this.dtd.entities.parameter, external.dtd.entities.parameter);
+    let external: External, id!: string;
+    try {
+      id = externalDecl.join(' ');
+      external = new External(externalDecl);
+    } catch (e) {
+      throw new InvalidExternalID(id);
+    }
+    const markup = await external.fetch(this.urlBase);
+    const doctype = new DocType(this.urlBase);
+    await doctype.parseInternal(markup);
+    Object.assign(this.dtd.entities.general, doctype.dtd.entities.general);
+    Object.assign(this.dtd.entities.parameter, doctype.dtd.entities.parameter);
   }
 
   private async parseInternal(dtd: string): Promise<void> {
@@ -132,7 +152,7 @@ export default class DocType implements IDocType {
 
   private parseMarkup(declaration: string): void {
     if (declaration.startsWith('<!ENTITY')) this.parseEntity(declaration);
-    else throw new Error(TEXTS.errInvalidDeclaration);
+    else throw new DeclarationException(declaration);
   }
 
   /**

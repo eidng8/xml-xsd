@@ -4,7 +4,7 @@
  * Author: eidng8
  */
 
-import { TEXTS } from '../translations/en';
+import { DeclarationException, InvalidEntity } from '..';
 
 export function parseLiteral(literal: string): string {
   literal = literal.trim();
@@ -23,7 +23,8 @@ export function decompose(markup: string) {
 export function extractBlock(dtd: string, start = 0): [string, number] {
   let c = dtd[start];
   let nest = -1;
-  for (let i = start; i < dtd.length; i++) {
+  let i = start;
+  for (; i < dtd.length; i++) {
     c = dtd[i];
     if ('<' == c) nest++;
     else if ('>' == c) {
@@ -33,57 +34,71 @@ export function extractBlock(dtd: string, start = 0): [string, number] {
       nest--;
     }
   }
-  throw new Error(TEXTS.errInvalidDeclaration);
+  const substr =
+    i - start > 40
+      ? dtd.substring(start, i)
+      : dtd.substr(start, 20) + ' ... ' + dtd.substring(i - 20, i);
+  throw new DeclarationException(substr, dtd);
 }
 
+// noinspection OverlyComplexFunctionJS,FunctionTooLongJS
 export function extractMarkup(dtd: string, start = 0): [string, number] | null {
   let c = '';
-  let p = -1;
-  while (start < dtd.length) {
-    c = dtd[start++];
-    if (-1 == p && ('%' == c || '&' == c)) {
-      let i = dtd.indexOf(';', start);
+  let ps = -1;
+  let pe = start;
+  let nested = -1;
+  while (pe < dtd.length) {
+    c = dtd[pe++];
+    if (-1 == ps && ('%' == c || '&' == c)) {
+      let i = dtd.indexOf(';', pe);
       if (-1 == i) {
-        throw new Error(TEXTS.errInvalidDeclaration);
+        let es = dtd.substr(pe);
+        if (es.length > 10) es = es.substr(0, 10) + '...';
+        throw new InvalidEntity(es, dtd);
       }
-      return [dtd.substring(start - 1, ++i), i];
+      return [dtd.substring(pe - 1, ++i), i];
     } else if ('<' == c) {
-      p = start;
+      ps = pe;
+      nested++;
       // conditional sections
-      if ('!' == dtd[p] && '[' == dtd[p + 1]) {
-        const [block, e] = extractBlock(dtd, p - 1);
+      if ('!' == dtd[ps] && '[' == dtd[ps + 1]) {
+        const [block, e] = extractBlock(dtd, ps - 1);
         if (block.endsWith(']]>')) {
-          start = e;
+          pe = e;
           // ignore CDATA
           if (block.startsWith('<![CDATA[')) {
-            p = -1;
+            ps = -1;
             continue;
           }
-          return [block, start];
+          return [block, pe];
         }
-        throw new Error(TEXTS.errInvalidDeclaration);
+        throw new DeclarationException(block, dtd);
       }
     } else if ('>' == c) {
-      if (-1 == p) {
-        throw new Error(TEXTS.errInvalidDeclaration);
+      if (-1 == ps) {
+        throw new DeclarationException(dtd.substring(start, pe), dtd);
+      }
+      if (nested > 0) {
+        nested--;
+        continue;
       }
       // ignore process instructions
-      if ('?' == dtd[p]) {
-        if ('?' == dtd[start - 2]) {
-          p = -1;
+      if ('?' == dtd[ps]) {
+        if ('?' == dtd[pe - 2]) {
+          ps = -1;
           continue;
         }
-        throw new Error(TEXTS.errInvalidDeclaration);
+        throw new DeclarationException(dtd.substring(ps - 1, pe), dtd);
       }
       // ignore comments
-      if ('!' == dtd[p] && '-' == dtd[p + 1] && '-' == dtd[p + 2]) {
-        if ('-' == dtd[start - 2] && '-' == dtd[start - 3]) {
-          p = -1;
+      if ('!' == dtd[ps] && '-' == dtd[ps + 1] && '-' == dtd[ps + 2]) {
+        if ('-' == dtd[pe - 2] && '-' == dtd[pe - 3]) {
+          ps = -1;
           continue;
         }
-        throw new Error(TEXTS.errInvalidDeclaration);
+        throw new DeclarationException(dtd.substring(ps - 1, pe), dtd);
       }
-      return [dtd.substring(p - 1, start), start];
+      return [dtd.substring(ps - 1, pe), pe];
     }
   }
   return null;

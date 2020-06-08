@@ -4,7 +4,7 @@
  * Author: eidng8
  */
 
-import { EDtdElementType, ElementDeclaration, TEXTS } from '../../src';
+import { EDtdElementType, ElementDeclaration, InvalidElement } from '../../src';
 
 it('should be `EMPTY`', () => {
   expect.assertions(4);
@@ -51,5 +51,7 @@ it.skip('should have mixed content', () => {
 it('should throw on invalid content', () => {
   expect.assertions(1);
   const element = new ElementDeclaration('<!ELEMENT tag child5>');
-  expect(() => element.parse()).toThrow(TEXTS.errInvalidDeclaration);
+  expect(() => element.parse()).toThrow(
+    new InvalidElement('child5', '<!ELEMENT tag child5>'),
+  );
 });

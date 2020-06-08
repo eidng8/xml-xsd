@@ -16,6 +16,18 @@ export * from './types/xml/doctype';
 export * from './types/xml/document';
 export * from './types/parse';
 
+export * from './exceptions/DeclarationException';
+export * from './exceptions/InvalidExternalID';
+export * from './exceptions/InvalidElement';
+export * from './exceptions/InvalidEntity';
+export * from './exceptions/InvalidEntityValue';
+export * from './exceptions/InvalidUnparsedEntity';
+export * from './exceptions/InvalidEnumerated';
+export * from './exceptions/InvalidName';
+export * from './exceptions/InvalidPubIdLiteral';
+export * from './exceptions/InvalidSystemIdentifier';
+export * from './exceptions/InvalidSystemLiteral';
+
 export * from './utils/markup';
 export * from './utils/timer';
 export * from './utils/type-guards';

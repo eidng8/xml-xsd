@@ -4,13 +4,14 @@
  * Author: eidng8
  */
 
+import moxios = require('moxios');
 import {
   EDtdExternalType,
   EEntityState,
   EntityDeclaration,
-  TEXTS,
+  InvalidEntityValue,
+  InvalidExternalID,
 } from '../../src';
-import moxios = require('moxios');
 
 describe('General entity', test(false));
 
@@ -21,7 +22,7 @@ describe('Unparsed entities', () => {
     expect.assertions(13);
     const declaration =
       '<!ENTITY name PUBLIC "public_ID" \'URI\' NDATA unp_name>';
-    const ent = new EntityDeclaration(declaration);
+    const ent = new EntityDeclaration(declaration, 'http://example.com/base');
     ent.parse();
     expect(ent.name).toBe('name');
     expect(ent.general).toBe(true);
@@ -41,7 +42,7 @@ describe('Unparsed entities', () => {
   it('should accept private external', async () => {
     expect.assertions(13);
     const declaration = "<!ENTITY name SYSTEM 'URI' NDATA unp_name>";
-    const ent = new EntityDeclaration(declaration);
+    const ent = new EntityDeclaration(declaration, 'http://example.com/base');
     ent.parse();
     expect(ent.name).toBe('name');
     expect(ent.general).toBe(true);
@@ -62,16 +63,19 @@ describe('Unparsed entities', () => {
 describe('Exceptions', () => {
   it('should throw if not enough composition parts', () => {
     expect.assertions(1);
-    const ent = new EntityDeclaration('');
-    expect(() => ent.parse()).toThrow(TEXTS.errInvalidDeclaration);
+    const ent = new EntityDeclaration('<!ENTITY abc def>', 'base');
+    expect(() => ent.parse()).toThrow(new InvalidEntityValue('abc', 'def'));
   });
 
   it('should throw on invalid unparsed entity', () => {
     expect.assertions(1);
     const declaration = '<!ENTITY name PUBLIC "public_ID" "URI" unp_name>';
-    const ent = new EntityDeclaration(declaration);
+    const ent = new EntityDeclaration(declaration, 'http://example.com/base');
     expect(() => ent.parse()).toThrow(
-      TEXTS.errInvalidUnparsedEntityDeclaration,
+      new InvalidExternalID(
+        'PUBLIC "public_ID" "URI" unp_name',
+        '<!ENTITY name PUBLIC "public_ID" "URI" unp_name>',
+      ),
     );
   });
 });
@@ -94,7 +98,7 @@ describe('Value queue', () => {
       });
     });
     const declaration = '<!ENTITY name PUBLIC "public_ID" "URI">';
-    const ent = new EntityDeclaration(declaration);
+    const ent = new EntityDeclaration(declaration, 'http://example.com/base');
     ent.parse();
     ent.value.then(res => expect(res).toBe('abc'));
   });
@@ -114,7 +118,7 @@ describe('Value queue', () => {
       request.respondWith({ status: 404, response: 'abc' });
     });
     const declaration = '<!ENTITY name PUBLIC "public_ID" "URI">';
-    const ent = new EntityDeclaration(declaration);
+    const ent = new EntityDeclaration(declaration, 'http://example.com/base');
     ent.parse().value.catch(err => {
       expect(err.response.status).toBe(404);
       expect(err.response.data).toEqual('abc');
@@ -128,7 +132,7 @@ function test(parameter) {
       expect.assertions(9);
       let declaration = '<!ENTITY name "value">';
       if (parameter) declaration = '<!ENTITY % name "value">';
-      const ent = new EntityDeclaration(declaration);
+      const ent = new EntityDeclaration(declaration, 'http://example.com/base');
       ent.parse();
       expect(ent.name).toBe('name');
       expect(ent.external).toBeUndefined();
@@ -167,7 +171,7 @@ function test(parameter) {
       });
       let declaration = '<!ENTITY name PUBLIC "public_ID" "URI">';
       if (parameter) declaration = '<!ENTITY % name PUBLIC "public_ID" "URI">';
-      const ent = new EntityDeclaration(declaration);
+      const ent = new EntityDeclaration(declaration, 'http://example.com/base');
       ent.parse();
       ent.value.then(val => expect(val).toBe('abc'));
     });
@@ -196,7 +200,7 @@ function test(parameter) {
       });
       let declaration = "<!ENTITY name SYSTEM 'URI'>";
       if (parameter) declaration = "<!ENTITY % name SYSTEM 'URI'>";
-      const ent = new EntityDeclaration(declaration);
+      const ent = new EntityDeclaration(declaration, 'http://example.com/base');
       ent.parse();
       ent.value.then(val => expect(val).toBe('abc'));
     });

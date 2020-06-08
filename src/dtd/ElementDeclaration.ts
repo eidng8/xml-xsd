@@ -8,6 +8,7 @@ import { EDtdElementType } from '../types/dtd/DtdElementType';
 import { TEXTS } from '../translations/en';
 import { DeclarationBase } from '../mixins/DeclarationBase';
 import { HasEnumerated } from '../mixins/HasEnumerated';
+import { InvalidElement } from '../exceptions/InvalidElement';
 
 export class ElementDeclaration extends HasEnumerated(DeclarationBase) {
   private _type!: EDtdElementType;
@@ -30,7 +31,9 @@ export class ElementDeclaration extends HasEnumerated(DeclarationBase) {
       this.parseEnumerated();
       this._type = EDtdElementType.mixed;
       return;
-    } else throw new Error(TEXTS.errInvalidDeclaration);
+    } else {
+      this.throwError(InvalidElement, content, TEXTS.errInvalidDeclaration);
+    }
     this.parts.shift();
   }
 }

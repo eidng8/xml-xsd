@@ -5,6 +5,7 @@
  */
 
 import {
+  InvalidName,
   TEXTS,
   validateEntityValue,
   validateName,
@@ -29,32 +30,32 @@ describe('Name', () => {
   it('should throw on invalid start char', () => {
     expect.assertions(3);
     expect(() => validateName('-abc', 'cde')).toThrow(
-      `Invalid name \`-abc\` in \`cde\``,
+      new InvalidName('-abc', 'cde'),
     );
     expect(() => validateName('.abc', 'cde')).toThrow(
-      `Invalid name \`.abc\` in \`cde\``,
+      new InvalidName('.abc', 'cde'),
     );
     expect(() => validateName('2abc', 'cde')).toThrow(
-      `Invalid name \`2abc\` in \`cde\``,
+      new InvalidName('2abc', 'cde'),
     );
   });
 
   it('should throw on invalid char', () => {
     expect.assertions(5);
     expect(() => validateName('a&bc', 'cde')).toThrow(
-      `Invalid name \`a&bc\` in \`cde\``,
+      new InvalidName('a&bc', 'cde'),
     );
     expect(() => validateName('a"bc', 'cde')).toThrow(
-      `Invalid name \`a"bc\` in \`cde\``,
+      new InvalidName('a"bc', 'cde'),
     );
     expect(() => validateName("a'bc", 'cde')).toThrow(
-      `Invalid name \`a'bc\` in \`cde\``,
+      new InvalidName("a'bc", 'cde'),
     );
     expect(() => validateName('a\tbc', 'cde')).toThrow(
-      `Invalid name \`a\tbc\` in \`cde\``,
+      new InvalidName('a\tbc', 'cde'),
     );
     expect(() => validateName('a bc', 'cde')).toThrow(
-      `Invalid name \`a bc\` in \`cde\``,
+      new InvalidName('a bc', 'cde'),
     );
   });
 });

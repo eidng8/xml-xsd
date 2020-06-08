@@ -4,8 +4,9 @@
  * Author: eidng8
  */
 
-import { DeclarationBase, DeclarationConstructor } from './DeclarationBase';
 import { TEXTS } from '../translations/en';
+import { InvalidEnumerated } from '../exceptions/InvalidEnumerated';
+import { DeclarationBase, DeclarationConstructor } from './DeclarationBase';
 
 export function HasEnumerated<
   T extends DeclarationConstructor<DeclarationBase>
@@ -25,7 +26,9 @@ export function HasEnumerated<
 
     protected parseEnumerated(): void {
       const type = this.parts.shift()!;
-      if ('(' != type[0]) throw new Error(TEXTS.errInvalidDeclaration);
+      if ('(' != type[0]) {
+        this.throwError(InvalidEnumerated, type, TEXTS.errInvalidEnumerated);
+      }
       this._pattern = type.substr(1, type.length - 2);
       this._enumValues = this._pattern.split('|');
     }

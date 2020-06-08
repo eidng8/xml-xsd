@@ -5,7 +5,12 @@
  */
 
 import moxios from 'moxios';
-import { EDtdExternalType, EEntityState, External, TEXTS } from '../../src';
+import {
+  EDtdExternalType,
+  EEntityState,
+  External,
+  InvalidExternalID,
+} from '../../src';
 
 describe('External DTD', () => {
   it('handles private DTD', () => {
@@ -103,22 +108,26 @@ describe('External DTD', () => {
 describe('Errors', () => {
   it('should throw on invalid type', () => {
     expect.assertions(1);
-    expect(() => new External(['abc'])).toThrow(TEXTS.errInvalidExternalID);
+    expect(() => new External(['abc'])).toThrow(new InvalidExternalID('abc '));
   });
 
   it('should throw if name is missing', () => {
     expect.assertions(2);
-    expect(() => new External(['PUBLIC'])).toThrow(TEXTS.errInvalidExternalID);
+    expect(() => new External(['PUBLIC'])).toThrow(
+      new InvalidExternalID('PUBLIC   '),
+    );
     expect(() => new External(['PUBLIC', '', 'abc'])).toThrow(
-      TEXTS.errInvalidExternalID,
+      new InvalidExternalID('PUBLIC  abc '),
     );
   });
 
   it('should throw if URI is missing', () => {
     expect.assertions(2);
     expect(() => new External(['PUBLIC', 'abc'])).toThrow(
-      TEXTS.errInvalidExternalID,
+      new InvalidExternalID('PUBLIC abc  '),
     );
-    expect(() => new External(['SYSTEM'])).toThrow(TEXTS.errInvalidExternalID);
+    expect(() => new External(['SYSTEM'])).toThrow(
+      new InvalidExternalID('SYSTEM   '),
+    );
   });
 });

@@ -4,13 +4,14 @@
  * Author: eidng8
  */
 import axios from 'axios';
-import { TEXTS } from '../translations/en';
 import { EDtdExternalType } from '../types/dtd/DtdExternalType';
 import {
   validatePubIdLiteral,
   validateSystemIdentifier,
 } from '../utils/validators';
-import { EEntityState } from '..';
+import { EEntityState } from '../types/dtd/EntityState';
+import { InvalidExternalID } from '../exceptions/InvalidExternalID';
+import { InvalidUnparsedEntity } from '../exceptions/InvalidUnparsedEntity';
 
 export class External {
   private _type?: EDtdExternalType;
@@ -122,7 +123,7 @@ export class External {
         this.parsePrivate(parts);
         break;
       default:
-        External.throwError(TEXTS.errInvalidExternalID, type, ...parts);
+        throw new InvalidExternalID(`${type} ${parts.join(' ')}`);
     }
   }
 
@@ -142,7 +143,7 @@ export class External {
     const name = parts.shift()!;
     const uri = parts.shift()!;
     if (!name || !uri) {
-      External.throwError(TEXTS.errInvalidExternalID, 'PUBLIC', name, uri);
+      throw new InvalidExternalID(`PUBLIC ${name} ${uri} ${parts.join(' ')}`);
     }
     this._type = EDtdExternalType.public;
     this._name = validatePubIdLiteral(name);
@@ -153,7 +154,7 @@ export class External {
   private parsePrivate(parts: string[]): void {
     const uri = parts.shift()!;
     if (!uri) {
-      External.throwError(TEXTS.errInvalidExternalID, 'SYSTEM', uri);
+      throw new InvalidExternalID(`SYSTEM ${uri} ${parts.join(' ')}`);
     }
     this._type = EDtdExternalType.private;
     this._uri = validateSystemIdentifier(uri);
@@ -167,13 +168,6 @@ export class External {
       //this._unparsed = validateNotation(declaration[1]);
       return;
     }
-    throw new Error(TEXTS.errInvalidUnparsedEntityDeclaration);
-  }
-
-  private static throwError(
-    msg: string,
-    ...args: (string | undefined)[]
-  ): void {
-    throw new Error(`${msg}: ${args ? args.join(' ') : ''}`);
+    throw new InvalidUnparsedEntity(declaration.join(' '));
   }
 }

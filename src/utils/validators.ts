@@ -5,7 +5,11 @@
  */
 
 import XRegExp from 'xregexp';
-import { format, TEXTS } from '../translations/en';
+import { InvalidEntityValue } from '../exceptions/InvalidEntityValue';
+import { InvalidSystemIdentifier } from '../exceptions/InvalidSystemIdentifier';
+import { InvalidSystemLiteral } from '../exceptions/InvalidSystemLiteral';
+import { InvalidPubIdLiteral } from '../exceptions/InvalidPubIdLiteral';
+import { InvalidName } from '../exceptions/InvalidName';
 
 const pubIdChar = '()+,./:=?;!*#@$_%a-zA-Z0-9 \\n\\r-';
 
@@ -35,46 +39,47 @@ const charRef = '&#(?=\\d+;)[^&;]+;|&#x(?=[\\da-fA-F]+;)[^&;]+;';
  * @param str
  * @param context
  */
-export function validateName(str: string, context: string): string {
+export function validateName(str: string, context?: string): string {
   if (XRegExp(`^${name}$`).test(str)) return str;
-  throw new Error(format(TEXTS.errInvalidName, [str, context]));
+  throw new InvalidName(str, context);
 }
 
 /**
  * https://www.w3.org/TR/REC-xml/#NT-PubidLiteral
- * @param str
  */
-export function validatePubIdLiteral(str: string): string {
+export function validatePubIdLiteral(str: string, context?: string): string {
   const regex = XRegExp(`^"['${pubIdChar}]*"$|^'["${pubIdChar}]*'$`);
   if (regex.test(str)) return str.substr(1, str.length - 2).trim();
-  throw new Error(TEXTS.errInvalidPubIdLiteral);
+  throw new InvalidPubIdLiteral(str, context);
 }
 
 /**
  * https://www.w3.org/TR/REC-xml/#NT-SystemLiteral
  */
-export function validateSystemLiteral(str: string): string {
+export function validateSystemLiteral(str: string, context?: string): string {
   if (/^'[^']*'$|^"[^"]*"$/.test(str))
     return str.substr(1, str.length - 2).trim();
-  throw new Error(TEXTS.errInvalidSystemLiteral);
+  throw new InvalidSystemLiteral(str, context);
 }
 
 /**
  * https://www.w3.org/TR/REC-xml/#NT-ExternalID
  */
-export function validateSystemIdentifier(str: string): string {
+export function validateSystemIdentifier(
+  str: string,
+  context?: string,
+): string {
   if (/^'[^'#]*'$|^"[^"#]*"$/.test(str))
     return str.substr(1, str.length - 2).trim();
-  throw new Error(TEXTS.errInvalidSystemIdentifier);
+  throw new InvalidSystemIdentifier(str, context);
 }
 
 /**
  * https://www.w3.org/TR/REC-xml/#NT-EntityValue
- * @param str
  */
-export function validateEntityValue(str: string): string {
+export function validateEntityValue(str: string, context?: string): string {
   const refs = `${peRef}|${entityRef}|${charRef}`;
   const regex = XRegExp(`^"([^%&"]|${refs})*"$|^'([^%&']|${refs})*'$`);
   if (regex.test(str)) return str.substr(1, str.length - 2).trim();
-  throw new Error(TEXTS.errInvalidEntityValue);
+  throw new InvalidEntityValue(str, context);
 }

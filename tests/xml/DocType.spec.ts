@@ -7,7 +7,7 @@
 import moxios = require('moxios');
 import { DocType } from '../../src';
 
-describe('Basics', () => {
+describe('Internals', () => {
   let doctype: DocType;
 
   beforeEach(() => {
@@ -107,5 +107,14 @@ describe('Externals', () => {
     await doctype.parse(
       'root PUBLIC "DTD_name" "DTD_location" [<!ENTITY test "abc">]',
     );
+  });
+});
+
+describe('Real world samples', () => {
+  it('should parse XHTML transitional', async () => {
+    jest.setTimeout(50000);
+    await new DocType('http://www.w3.org')
+      .parse(`HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+  "http://www.w3.org/TR/REC-html40/loose.dtd"`);
   });
 });

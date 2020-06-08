@@ -52,7 +52,7 @@ export default class EntityDeclaration extends HasExternal(DeclarationBase)
     if ('PUBLIC' == this.parts[0] || 'SYSTEM' == this.parts[0]) {
       this.parseExternal();
     } else {
-      this._value = validateEntityValue(this.parts.shift()!);
+      this._value = validateEntityValue(this.parts.shift()!, this.declaration);
       this._state = EEntityState.ready;
     }
     return this;
