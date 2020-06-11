@@ -16,7 +16,7 @@ describe('Internals', () => {
 
   it('should parse root element', async () => {
     expect.assertions(1);
-    await doctype.parse('root []');
+    await doctype.parse('root [ ]');
     expect(doctype.rootElement).toBe('root');
   });
 
@@ -50,24 +50,23 @@ describe('Externals', () => {
     moxios.uninstall();
   });
 
-  it('should parse private external ID', async done => {
+  it('should parse private external ID', async () => {
     expect.assertions(4);
     moxios.wait(() => {
       const request = moxios.requests.mostRecent();
       expect(request.url).toBe('DTD_location');
       expect(request.config.baseURL).toBe('http://example.com/base');
-      request
-        .respondWith({
-          status: 200,
-          response: '<!ENTITY test1 "val1"><!--ccc--><!ENTITY test2 "val2">',
-        })
-        .then(async () => {
-          expect(await doctype.getEntity('test1').value).toBe('val1');
-          expect(await doctype.getEntity('test2').value).toBe('val2');
-          done();
-        });
+      request.respondWith({
+        status: 200,
+        response: '<!ENTITY test1 "val1"><!--ccc--><!ENTITY test2 "val2">',
+      });
+      // .then(async () => {
+      //   done();
+      // });
     });
     await doctype.parse('root SYSTEM "DTD_location"');
+    expect(await doctype.getEntity('test1').value).toBe('val1');
+    expect(await doctype.getEntity('test2').value).toBe('val2');
   });
 
   it('should parse public external ID', async done => {
@@ -78,7 +77,7 @@ describe('Externals', () => {
       request
         .respondWith({
           status: 200,
-          response: '<!ENTITY test1 "val1"><!--ccc--><!ENTITY test2 "val2">',
+          response: '<!ENTITY test1 "val1"><!----><!ENTITY test2 "val2">',
         })
         .then(async () => {
           expect(await doctype.getEntity('test1').value).toBe('val1');
@@ -113,7 +112,7 @@ describe('Externals', () => {
 describe('Real world samples', () => {
   it('should parse XHTML transitional', async () => {
     jest.setTimeout(50000);
-    await new DocType('http://www.w3.org')
+    await new DocType('http://www.w3.org/TR/REC-html40')
       .parse(`HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
   "http://www.w3.org/TR/REC-html40/loose.dtd"`);
   });

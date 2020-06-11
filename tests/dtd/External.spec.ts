@@ -114,7 +114,7 @@ describe('Errors', () => {
   it('should throw if name is missing', () => {
     expect.assertions(2);
     expect(() => new External(['PUBLIC'])).toThrow(
-      new InvalidExternalID('PUBLIC   '),
+      new InvalidExternalID('PUBLIC undefined undefined '),
     );
     expect(() => new External(['PUBLIC', '', 'abc'])).toThrow(
       new InvalidExternalID('PUBLIC  abc '),
@@ -124,10 +124,10 @@ describe('Errors', () => {
   it('should throw if URI is missing', () => {
     expect.assertions(2);
     expect(() => new External(['PUBLIC', 'abc'])).toThrow(
-      new InvalidExternalID('PUBLIC abc  '),
+      new InvalidExternalID('PUBLIC abc undefined '),
     );
     expect(() => new External(['SYSTEM'])).toThrow(
-      new InvalidExternalID('SYSTEM   '),
+      new InvalidExternalID('SYSTEM undefined '),
     );
   });
 });

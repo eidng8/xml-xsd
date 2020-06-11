@@ -64,7 +64,9 @@ describe('Exceptions', () => {
   it('should throw if not enough composition parts', () => {
     expect.assertions(1);
     const ent = new EntityDeclaration('<!ENTITY abc def>', 'base');
-    expect(() => ent.parse()).toThrow(new InvalidEntityValue('abc', 'def'));
+    expect(() => ent.parse()).toThrow(
+      new InvalidEntityValue('def', '<!ENTITY abc def>'),
+    );
   });
 
   it('should throw on invalid unparsed entity', () => {

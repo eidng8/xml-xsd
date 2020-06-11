@@ -76,19 +76,21 @@ export default class DocType implements IDocType {
       try {
         await this.parseRoot(dtd);
       } catch (e) {
-        throw new DeclarationException(e.input, e.context, e.message);
+        throw new DeclarationException(e.input, e.context, e._message);
       }
-    } else if (']' != dtd[dtd.length - 1]) {
-      throw new InvalidIntSubset(
-        dtd.length > 20 ? dtd.substr(0, 20) + '...' : dtd,
-        dtd,
-      );
     } else {
+      const ep = dtd.lastIndexOf(']');
+      if (-1 == ep) {
+        throw new InvalidIntSubset(
+          dtd.length > 20 ? dtd.substr(0, 20) + '...' : dtd,
+          dtd,
+        );
+      }
       try {
         await this.parseRoot(dtd.substring(0, bp));
-        await this.parseInternal(dtd.substring(bp + 1, dtd.length - 2));
+        await this.parseInternal(dtd.substring(bp, ep + 1));
       } catch (e) {
-        throw new DeclarationException(e.input, e.context, e.message);
+        throw new DeclarationException(e.input, e.context, e._message);
       }
     }
   }
@@ -135,6 +137,10 @@ export default class DocType implements IDocType {
   }
 
   private async parseInternal(dtd: string): Promise<void> {
+    if (!dtd || /\s*\[\s*]\s*/.test(dtd)) return;
+    if (/^\s*\[/.test(dtd)) {
+      dtd = dtd.substring(dtd.indexOf('[') + 1, dtd.lastIndexOf(']')).trim();
+    }
     let idx = 0;
     let markup = '';
     let match: [string, number] | null;

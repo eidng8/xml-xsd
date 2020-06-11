@@ -34,72 +34,74 @@ export function extractBlock(dtd: string, start = 0): [string, number] {
       nest--;
     }
   }
-  const substr =
-    i - start > 40
-      ? dtd.substring(start, i)
-      : dtd.substr(start, 20) + ' ... ' + dtd.substring(i - 20, i);
-  throw new DeclarationException(substr, dtd);
+  throw new DeclarationException(excerpt(dtd, start, i), dtd);
 }
 
 // noinspection OverlyComplexFunctionJS,FunctionTooLongJS
 export function extractMarkup(dtd: string, start = 0): [string, number] | null {
-  let c = '';
-  let ps = -1;
-  let pe = start;
+  let c = dtd[start];
   let nested = -1;
-  while (pe < dtd.length) {
-    c = dtd[pe++];
-    if (-1 == ps && ('%' == c || '&' == c)) {
-      let i = dtd.indexOf(';', pe);
-      if (-1 == i) {
-        let es = dtd.substr(pe);
-        if (es.length > 10) es = es.substr(0, 10) + '...';
-        throw new InvalidEntity(es, dtd);
-      }
-      return [dtd.substring(pe - 1, ++i), i];
-    } else if ('<' == c) {
-      ps = pe;
-      nested++;
-      // conditional sections
-      if ('!' == dtd[ps] && '[' == dtd[ps + 1]) {
-        const [block, e] = extractBlock(dtd, ps - 1);
-        if (block.endsWith(']]>')) {
-          pe = e;
-          // ignore CDATA
-          if (block.startsWith('<![CDATA[')) {
-            ps = -1;
-            continue;
-          }
-          return [block, pe];
-        }
-        throw new DeclarationException(block, dtd);
-      }
-    } else if ('>' == c) {
-      if (-1 == ps) {
-        throw new DeclarationException(dtd.substring(start, pe), dtd);
-      }
+  let i = start;
+  for (; i < dtd.length; i++) {
+    c = dtd[i];
+    if ('<' == c) {
       if (nested > 0) {
-        nested--;
+        nested++;
         continue;
-      }
-      // ignore process instructions
-      if ('?' == dtd[ps]) {
-        if ('?' == dtd[pe - 2]) {
-          ps = -1;
+      } else if ('?' == dtd[i + 1]) {
+        start = skipInstruction(dtd, i);
+        i = start - 1;
+        continue;
+      } else if ('!' == dtd[i + 1]) {
+        if ('-' == dtd[i + 2] && '-' == dtd[i + 3]) {
+          start = skipComment(dtd, i);
+          i = start - 1;
+          continue;
+        } else if ('[' == dtd[i + 2] && 'C' == dtd[i + 3]) {
+          start = skipCData(dtd, i);
+          i = start - 1;
           continue;
         }
-        throw new DeclarationException(dtd.substring(ps - 1, pe), dtd);
       }
-      // ignore comments
-      if ('!' == dtd[ps] && '-' == dtd[ps + 1] && '-' == dtd[ps + 2]) {
-        if ('-' == dtd[pe - 2] && '-' == dtd[pe - 3]) {
-          ps = -1;
-          continue;
-        }
-        throw new DeclarationException(dtd.substring(ps - 1, pe), dtd);
+      nested++;
+    } else if ('>' == c) {
+      if (0 == nested) return [dtd.substring(start, i + 1).trim(), i + 1];
+      nested--;
+    } else if (-1 == nested) {
+      if ('&' == c || '%' == c) {
+        let ep = dtd.indexOf(';', i + 2);
+        if (-1 == ep) throw new InvalidEntity(excerpt(dtd, i), dtd);
+        return [dtd.substring(i, ++ep).trim(), ep];
       }
-      return [dtd.substring(ps - 1, pe), pe];
     }
   }
-  return null;
+  if (-1 == nested) return null;
+  throw new DeclarationException(excerpt(dtd, start, i), dtd);
+}
+
+function skipCData(dtd: string, start: number): number {
+  let end = dtd.indexOf(']]>', start + 4);
+  if (-1 == end || '<![CDATA[' != dtd.substr(start, 9)) {
+    throw new DeclarationException(excerpt(dtd, start, end), dtd);
+  }
+  return end + 3;
+}
+
+function skipComment(dtd: string, start: number): number {
+  let end = dtd.indexOf('-->', start + 4);
+  if (-1 == end) throw new DeclarationException(excerpt(dtd, start, end), dtd);
+  return end + 3;
+}
+
+function skipInstruction(dtd: string, start: number): number {
+  let end = dtd.indexOf('?>', start + 2);
+  if (-1 == end) throw new DeclarationException(excerpt(dtd, start, end), dtd);
+  return end + 2;
+}
+
+function excerpt(dtd: string, start: number, end?: number): string {
+  if (!end || end < 0) end = dtd.length;
+  return end - start > 40
+    ? dtd.substr(start, 20) + ' ... ' + dtd.substring(end - 20, end)
+    : dtd.substring(start, end);
 }

@@ -4,7 +4,7 @@
  * Author: eidng8
  */
 
-import { extractBlock, extractMarkup, TEXTS } from '../../src';
+import { extractBlock, extractMarkup, InvalidEntity, TEXTS } from '../../src';
 
 describe('extractBlock', function () {
   it('should throw if not well-formed', function () {
@@ -170,7 +170,7 @@ describe('extractMarkup', () => {
   });
 
   it('should ignore comment', function () {
-    expect.assertions(1);
+    expect.assertions(2);
     expect(extractMarkup('<!--a-->%abc;')).toEqual(['%abc;', 13]);
     expect(extractMarkup('<!--a <a@b.com>-->%abc;')).toEqual(['%abc;', 23]);
   });
@@ -187,8 +187,12 @@ describe('extractMarkup', () => {
 
   it('should throw on invalid entity usage', function () {
     expect.assertions(2);
-    expect(() => extractMarkup('&abc')).toThrow(TEXTS.errInvalidEntity);
-    expect(() => extractMarkup('%abc')).toThrow(TEXTS.errInvalidEntity);
+    expect(() => extractMarkup('&abc')).toThrow(
+      new InvalidEntity('&abc', '&abc'),
+    );
+    expect(() => extractMarkup('%abc')).toThrow(
+      new InvalidEntity('%abc', '%abc'),
+    );
   });
 
   it('should throw on invalid CDATA', function () {
@@ -206,5 +210,144 @@ describe('extractMarkup', () => {
   it('should throw on invalid process instruction', function () {
     expect.assertions(1);
     expect(() => extractMarkup('<?a>')).toThrow(TEXTS.errInvalidDeclaration);
+  });
+
+  it('should extract complex markup', function () {
+    const markup = `<!--
+    This is the HTML 4.01 Transitional DTD, which includes
+    presentation attributes and elements that W3C expects to phase out
+    as support for style sheets matures. Authors should use the Strict
+    DTD when possible, but may use the Transitional DTD when support
+    for presentation attribute and elements is required.
+
+    HTML 4 includes mechanisms for style sheets, scripting,
+    embedding objects, improved support for right to left and mixed
+    direction text, and enhancements to forms for improved
+    accessibility for people with disabilities.
+
+          Draft: $Date: 2018/04/05 15:13:09 $
+
+          Authors:
+              Dave Raggett <dsr@w3.org>
+              Arnaud Le Hors <lehors@w3.org>
+              Ian Jacobs <ij@w3.org>
+
+    Further information about HTML 4.01 is available at:
+
+        http://www.w3.org/TR/1999/REC-html401-19991224
+
+
+    The HTML 4.01 specification includes additional
+    syntactic constraints that cannot be expressed within
+    the DTDs.
+
+-->
+<!ENTITY % HTML.Version "-//W3C//DTD HTML 4.01 Transitional//EN"
+  -- Typical usage:
+
+    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+            "http://www.w3.org/TR/html4/loose.dtd">
+    <html>
+    <head>
+    ...
+    </head>
+    <body>
+    ...
+    </body>
+    </html>
+
+    The URI used as a system identifier with the public identifier allows
+    the user agent to download the DTD and entity sets as needed.
+
+    The FPI for the Strict HTML 4.01 DTD is:
+
+        "-//W3C//DTD HTML 4.01//EN"
+
+    This version of the strict DTD is:
+
+        http://www.w3.org/TR/1999/REC-html401-19991224/strict.dtd
+
+    Authors should use the Strict DTD unless they need the
+    presentation control for user agents that don't (adequately)
+    support style sheets.
+
+    If you are writing a document that includes frames, use
+    the following FPI:
+
+        "-//W3C//DTD HTML 4.01 Frameset//EN"
+
+    This version of the frameset DTD is:
+
+        http://www.w3.org/TR/1999/REC-html401-19991224/frameset.dtd
+
+    Use the following (relative) URIs to refer to
+    the DTDs and entity definitions of this specification:
+
+    "strict.dtd"
+    "loose.dtd"
+    "frameset.dtd"
+    "HTMLlat1.ent"
+    "HTMLsymbol.ent"
+    "HTMLspecial.ent"
+
+-->
+
+<!--================== Imported Names ====================================-->
+<!-- Feature Switch for frameset documents -->
+<!ENTITY % HTML.Frameset "IGNORE">
+
+<!ENTITY % ContentType "CDATA"
+    -- media type, as per [RFC2045]
+    -->`;
+    const expected = `<!ENTITY % HTML.Version "-//W3C//DTD HTML 4.01 Transitional//EN"
+  -- Typical usage:
+
+    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+            "http://www.w3.org/TR/html4/loose.dtd">
+    <html>
+    <head>
+    ...
+    </head>
+    <body>
+    ...
+    </body>
+    </html>
+
+    The URI used as a system identifier with the public identifier allows
+    the user agent to download the DTD and entity sets as needed.
+
+    The FPI for the Strict HTML 4.01 DTD is:
+
+        "-//W3C//DTD HTML 4.01//EN"
+
+    This version of the strict DTD is:
+
+        http://www.w3.org/TR/1999/REC-html401-19991224/strict.dtd
+
+    Authors should use the Strict DTD unless they need the
+    presentation control for user agents that don't (adequately)
+    support style sheets.
+
+    If you are writing a document that includes frames, use
+    the following FPI:
+
+        "-//W3C//DTD HTML 4.01 Frameset//EN"
+
+    This version of the frameset DTD is:
+
+        http://www.w3.org/TR/1999/REC-html401-19991224/frameset.dtd
+
+    Use the following (relative) URIs to refer to
+    the DTDs and entity definitions of this specification:
+
+    "strict.dtd"
+    "loose.dtd"
+    "frameset.dtd"
+    "HTMLlat1.ent"
+    "HTMLsymbol.ent"
+    "HTMLspecial.ent"
+
+-->`;
+    expect(extractMarkup(markup)).toEqual([expected, 2244]);
   });
 });
