@@ -3,7 +3,6 @@
  *
  * Author: eidng8
  */
-import axios from 'axios';
 import { EDtdExternalType } from '../types/dtd/DtdExternalType';
 import {
   validatePubIdLiteral,
@@ -14,6 +13,8 @@ import { InvalidExternalID } from '../exceptions/InvalidExternalID';
 import { InvalidUnparsedEntity } from '../exceptions/InvalidUnparsedEntity';
 
 export class External {
+  fetchFn?: (uri: string) => Promise<string>;
+
   private _type?: EDtdExternalType;
 
   private _name?: string;
@@ -129,13 +130,14 @@ export class External {
 
   /**
    * Fetches the remote content. Return empty string if the external has no URI.
-   * @param urlBase No trailing slash.
    */
-  async fetch(urlBase?: string): Promise<string> {
+  async fetch(): Promise<string> {
+    if (!this.fetchFn) {
+    }
     this._state = EEntityState.fetching;
-    return axios.get(this.uri, { baseURL: urlBase }).then(res => {
+    return this.fetchFn(this.uri).then(res => {
       this._state = EEntityState.ready;
-      return res && res.data;
+      return res;
     });
   }
 
