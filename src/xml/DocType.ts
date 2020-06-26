@@ -15,12 +15,15 @@ import { decompose, extractMarkup } from '../utils/markup';
 import { InvalidExternalID } from '../exceptions/InvalidExternalID';
 import { DeclarationException } from '../exceptions/DeclarationException';
 import { InvalidIntSubset } from '../exceptions/InvalidIntSubset';
+import { TFetchFn } from '..';
 
 /**
  * Due to the synchronous nature of `sax.js`, externals are not supported.
  */
 export default class DocType implements IDocType {
   readonly type = 'doctype' as 'doctype';
+
+  private readonly options?: { fetchFn: TFetchFn };
 
   private dtd = {
     root: '',
@@ -34,8 +37,6 @@ export default class DocType implements IDocType {
 
   private _parent?: IDocument;
 
-  private readonly urlBase: string;
-
   get parent(): IDocument | undefined {
     return this._parent;
   }
@@ -48,8 +49,8 @@ export default class DocType implements IDocType {
     return this.dtd.root;
   }
 
-  constructor(urlBase = '') {
-    this.urlBase = urlBase;
+  constructor(options?: { fetchFn: TFetchFn }) {
+    this.options = options;
   }
 
   getEntity(name: string): IEntityDeclaration {
@@ -126,11 +127,12 @@ export default class DocType implements IDocType {
     try {
       id = externalDecl.join(' ');
       external = new External(externalDecl);
+      external.fetchFn = this.options && this.options.fetchFn;
     } catch (e) {
       throw new InvalidExternalID(id);
     }
-    const markup = await external.fetch(this.urlBase);
-    const doctype = new DocType(this.urlBase);
+    const markup = await external.fetch();
+    const doctype = new DocType(this.options);
     await doctype.parseInternal(markup);
     Object.assign(this.dtd.entities.general, doctype.dtd.entities.general);
     Object.assign(this.dtd.entities.parameter, doctype.dtd.entities.parameter);
@@ -186,7 +188,7 @@ export default class DocType implements IDocType {
    * @param declaration
    */
   private parseEntity(declaration: string): void {
-    const entity = new EntityDeclaration(declaration, this.urlBase).parse();
+    const entity = new EntityDeclaration(declaration).parse();
     if (entity.isParameter) this.dtd.entities.parameter[entity.name] = entity;
     else this.dtd.entities.general[entity.name] = entity;
   }

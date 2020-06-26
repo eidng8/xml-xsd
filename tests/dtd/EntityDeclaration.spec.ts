@@ -4,7 +4,6 @@
  * Author: eidng8
  */
 
-import moxios = require('moxios');
 import {
   EDtdExternalType,
   EEntityState,
@@ -22,7 +21,7 @@ describe('Unparsed entities', () => {
     expect.assertions(13);
     const declaration =
       '<!ENTITY name PUBLIC "public_ID" \'URI\' NDATA unp_name>';
-    const ent = new EntityDeclaration(declaration, 'http://example.com/base');
+    const ent = new EntityDeclaration(declaration);
     ent.parse();
     expect(ent.name).toBe('name');
     expect(ent.general).toBe(true);
@@ -42,7 +41,7 @@ describe('Unparsed entities', () => {
   it('should accept private external', async () => {
     expect.assertions(13);
     const declaration = "<!ENTITY name SYSTEM 'URI' NDATA unp_name>";
-    const ent = new EntityDeclaration(declaration, 'http://example.com/base');
+    const ent = new EntityDeclaration(declaration);
     ent.parse();
     expect(ent.name).toBe('name');
     expect(ent.general).toBe(true);
@@ -63,7 +62,7 @@ describe('Unparsed entities', () => {
 describe('Exceptions', () => {
   it('should throw if not enough composition parts', () => {
     expect.assertions(1);
-    const ent = new EntityDeclaration('<!ENTITY abc def>', 'base');
+    const ent = new EntityDeclaration('<!ENTITY abc def>');
     expect(() => ent.parse()).toThrow(
       new InvalidEntityValue('def', '<!ENTITY abc def>'),
     );
@@ -72,7 +71,7 @@ describe('Exceptions', () => {
   it('should throw on invalid unparsed entity', () => {
     expect.assertions(1);
     const declaration = '<!ENTITY name PUBLIC "public_ID" "URI" unp_name>';
-    const ent = new EntityDeclaration(declaration, 'http://example.com/base');
+    const ent = new EntityDeclaration(declaration);
     expect(() => ent.parse()).toThrow(
       new InvalidExternalID(
         'PUBLIC "public_ID" "URI" unp_name',
@@ -83,47 +82,40 @@ describe('Exceptions', () => {
 });
 
 describe('Value queue', () => {
-  beforeEach(() => moxios.install());
-
-  afterEach(() => moxios.uninstall());
-
   it('should resolve all subscribers', async done => {
-    expect.assertions(3);
-    moxios.wait(() => {
-      const request = moxios.requests.mostRecent();
+    expect.assertions(2);
+    const declaration = '<!ENTITY name PUBLIC "public_ID" "URI">';
+    const ent = new EntityDeclaration(declaration);
+    ent.external!.fetchFn = () => {
       Promise.all([ent.value, ent.value]).then(vals => {
         expect(vals).toEqual(['abc', 'abc']);
       });
-      request.respondWith({ response: 'abc' }).then(async () => {
-        expect(await ent.value).toBe('abc');
-        done();
-      });
-    });
-    const declaration = '<!ENTITY name PUBLIC "public_ID" "URI">';
-    const ent = new EntityDeclaration(declaration, 'http://example.com/base');
+      return Promise.resolve('abc');
+    };
     ent.parse();
-    ent.value.then(res => expect(res).toBe('abc'));
+    ent.value.then(res => {
+      expect(res).toBe('abc');
+      done();
+    });
   });
 
   it('should reject all subscribers', async done => {
-    expect.assertions(7);
-    moxios.wait(() => {
-      const request = moxios.requests.mostRecent();
+    expect.assertions(6);
+    const declaration = '<!ENTITY name PUBLIC "public_ID" "URI">';
+    const ent = new EntityDeclaration(declaration);
+    ent.external!.fetchFn = () => {
       Promise.allSettled([ent.value, ent.value]).then(errs => {
         expect(errs.length).toBe(2);
         expect(errs[0].status).toBe('rejected');
         expect(errs[0]['reason']['response']['data']).toBe('abc');
         expect(errs[1].status).toBe('rejected');
         expect(errs[1]['reason']['response']['data']).toBe('abc');
-        done();
       });
-      request.respondWith({ status: 404, response: 'abc' });
-    });
-    const declaration = '<!ENTITY name PUBLIC "public_ID" "URI">';
-    const ent = new EntityDeclaration(declaration, 'http://example.com/base');
+      return Promise.reject('abc');
+    };
     ent.parse().value.catch(err => {
-      expect(err.response.status).toBe(404);
-      expect(err.response.data).toEqual('abc');
+      expect(err).toEqual('abc');
+      done();
     });
   });
 });
@@ -134,7 +126,7 @@ function test(parameter) {
       expect.assertions(9);
       let declaration = '<!ENTITY name "value">';
       if (parameter) declaration = '<!ENTITY % name "value">';
-      const ent = new EntityDeclaration(declaration, 'http://example.com/base');
+      const ent = new EntityDeclaration(declaration);
       ent.parse();
       expect(ent.name).toBe('name');
       expect(ent.external).toBeUndefined();
@@ -149,62 +141,57 @@ function test(parameter) {
 
     it('should accept public external', async done => {
       expect.assertions(15);
-      moxios.install();
-      moxios.wait(() => {
-        expect(ent.state).toBe(EEntityState.fetching);
-        const request = moxios.requests.mostRecent();
-        request.respondWith({ response: 'abc' }).then(async () => {
-          expect(ent.name).toBe('name');
-          expect(ent.external!.type).toBe(EDtdExternalType.public);
-          expect(ent.general).toBe(!parameter);
-          expect(ent.isInternal).toBe(false);
-          expect(ent.isExternal).toBe(true);
-          expect(ent.isParsed).toBe(true);
-          expect(ent.isParameter).toBe(parameter);
-          expect(ent.state).toBe(EEntityState.ready);
-          expect(ent.external!.name).toBe('public_ID');
-          expect(ent.external!.uri).toBe('URI');
-          expect(ent.external!.unparsed).toBeUndefined();
-          expect(ent.external!.isPublic).toBe(true);
-          expect(ent.external!.isPrivate).toBe(false);
-          moxios.uninstall();
-          done();
-        });
-      });
       let declaration = '<!ENTITY name PUBLIC "public_ID" "URI">';
       if (parameter) declaration = '<!ENTITY % name PUBLIC "public_ID" "URI">';
-      const ent = new EntityDeclaration(declaration, 'http://example.com/base');
+      const ent = new EntityDeclaration(declaration);
+      ent.external!.fetchFn = () => {
+        expect(ent.name).toBe('name');
+        expect(ent.external!.type).toBe(EDtdExternalType.public);
+        expect(ent.general).toBe(!parameter);
+        expect(ent.isInternal).toBe(false);
+        expect(ent.isExternal).toBe(true);
+        expect(ent.isParsed).toBe(true);
+        expect(ent.isParameter).toBe(parameter);
+        expect(ent.state).toBe(EEntityState.ready);
+        expect(ent.external!.name).toBe('public_ID');
+        expect(ent.external!.uri).toBe('URI');
+        expect(ent.external!.unparsed).toBeUndefined();
+        expect(ent.external!.isPublic).toBe(true);
+        expect(ent.external!.isPrivate).toBe(false);
+        return Promise.resolve('abc');
+      };
       ent.parse();
-      ent.value.then(val => expect(val).toBe('abc'));
+      ent.value.then(val => {
+        expect(val).toBe('abc');
+        done();
+      });
     });
 
     it('should accept private external', async done => {
       expect.assertions(13);
-      moxios.install();
-      moxios.wait(() => {
-        const request = moxios.requests.mostRecent();
-        request.respondWith({ response: 'abc' }).then(async () => {
-          expect(ent.name).toBe('name');
-          expect(ent.general).toBe(!parameter);
-          expect(ent.isInternal).toBe(false);
-          expect(ent.isExternal).toBe(true);
-          expect(ent.isParsed).toBe(true);
-          expect(ent.isParameter).toBe(parameter);
-          expect(ent.external!.type).toBe(EDtdExternalType.private);
-          expect(ent.external!.uri).toBe('URI');
-          expect(ent.external!.name).toBeUndefined();
-          expect(ent.external!.unparsed).toBeUndefined();
-          expect(ent.external!.isPublic).toBe(false);
-          expect(ent.external!.isPrivate).toBe(true);
-          moxios.uninstall();
-          done();
-        });
-      });
       let declaration = "<!ENTITY name SYSTEM 'URI'>";
       if (parameter) declaration = "<!ENTITY % name SYSTEM 'URI'>";
-      const ent = new EntityDeclaration(declaration, 'http://example.com/base');
+      const ent = new EntityDeclaration(declaration);
+      ent.external!.fetchFn = () => {
+        expect(ent.name).toBe('name');
+        expect(ent.general).toBe(!parameter);
+        expect(ent.isInternal).toBe(false);
+        expect(ent.isExternal).toBe(true);
+        expect(ent.isParsed).toBe(true);
+        expect(ent.isParameter).toBe(parameter);
+        expect(ent.external!.type).toBe(EDtdExternalType.private);
+        expect(ent.external!.uri).toBe('URI');
+        expect(ent.external!.name).toBeUndefined();
+        expect(ent.external!.unparsed).toBeUndefined();
+        expect(ent.external!.isPublic).toBe(false);
+        expect(ent.external!.isPrivate).toBe(true);
+        return Promise.resolve('abc');
+      };
       ent.parse();
-      ent.value.then(val => expect(val).toBe('abc'));
+      ent.value.then(val => {
+        expect(val).toBe('abc');
+        done();
+      });
     });
   };
 }

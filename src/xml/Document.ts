@@ -10,7 +10,6 @@ import { IDocType } from '../types/xml/doctype';
 import { IDocument } from '../types/xml/document';
 import DocType from './DocType';
 import Declaration from './Declaration';
-import { extractBlock } from '../utils/markup';
 
 export default class Document implements IDocument {
   /**
@@ -48,7 +47,8 @@ export default class Document implements IDocument {
   private static parseDocType(xml: string): IDocType {
     let start = xml.indexOf('<!DOCTYPE ');
     if (-1 == start) return new DocType();
-    return new DocType(extractBlock(xml, start)[0]);
+    // const markup = extractBlock(xml, start);
+    return new DocType();
   }
 
   private constructor(url: string) {

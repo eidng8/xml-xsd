@@ -42,15 +42,19 @@ export default class EntityDeclaration extends HasExternal(DeclarationBase)
     return !this._general;
   }
 
-  constructor(declaration: string, urlBase: string) {
+  constructor(
+    declaration: string,
+    options?: { fetchFn: (uri: string) => Promise<string> },
+  ) {
     // @ts-ignore: TS2554
-    super(declaration, urlBase);
+    super(declaration, options);
   }
 
   parse(): EntityDeclaration {
     super.parse();
     if ('PUBLIC' == this.parts[0] || 'SYSTEM' == this.parts[0]) {
       this.parseExternal();
+      this.external!.fetchFn = this.options && this.options.fetchFn;
     } else {
       this._value = validateEntityValue(this.parts.shift()!, this.declaration);
       this._state = EEntityState.ready;

@@ -11,9 +11,10 @@ import {
 import { EEntityState } from '../types/dtd/EntityState';
 import { InvalidExternalID } from '../exceptions/InvalidExternalID';
 import { InvalidUnparsedEntity } from '../exceptions/InvalidUnparsedEntity';
+import { TFetchFn } from '../types/xml';
 
 export class External {
-  fetchFn?: (uri: string) => Promise<string>;
+  fetchFn?: TFetchFn;
 
   private _type?: EDtdExternalType;
 
@@ -133,6 +134,7 @@ export class External {
    */
   async fetch(): Promise<string> {
     if (!this.fetchFn) {
+      throw new Error('Fetcher function has not been set.');
     }
     this._state = EEntityState.fetching;
     return this.fetchFn(this.uri).then(res => {

@@ -4,7 +4,6 @@
  * Author: eidng8
  */
 
-import moxios from 'moxios';
 import {
   EDtdExternalType,
   EEntityState,
@@ -82,26 +81,22 @@ describe('External DTD', () => {
   });
 
   it('fetches remote content', done => {
-    expect.assertions(5);
-    moxios.install();
-    moxios.wait(() => {
-      const request = moxios.requests.mostRecent();
-      expect(request.url).toBe('external.dtd');
-      expect(request.config.baseURL).toBe('http://example.com/base');
-      request.respondWith({ response: 'abc' }).then(res => {
-        expect(res.data).toBe('abc');
-        expect(external.state).toBe(EEntityState.ready);
-        moxios.uninstall();
-        done();
-      });
-    });
+    expect.assertions(4);
     const external = new External([
       'PUBLIC',
       '"-//W3C//DTD HTML 4.0 Transitional//EN"',
       '"external.dtd"',
     ]);
-    external.fetch('http://example.com/base');
-    expect(external.state).toBe(EEntityState.fetching);
+    external.fetchFn = uri => {
+      expect(uri).toBe('external.dtd');
+      expect(external.state).toBe(EEntityState.fetching);
+      return Promise.resolve('abc');
+    };
+    external.fetch(/*'http://example.com/base'*/).then(res => {
+      expect(res).toBe('abc');
+      expect(external.state).toBe(EEntityState.ready);
+      done();
+    });
   });
 });
 

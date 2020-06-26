@@ -18,7 +18,7 @@ describe('Declaration', () => {
     expect(ent.isPublicId).toBe(true);
     expect(ent.name).toBe('name');
     expect(ent.id).toBe('public_ID');
-    expect(ent.url).toBeUndefined();
+    expect(ent.uri).toBeUndefined();
   });
 
   it('should accept public external', () => {
@@ -32,7 +32,7 @@ describe('Declaration', () => {
     expect(ent.name).toBe('name');
     expect(ent.id).toBe('public_ID');
     expect(ent.external!.uri).toBe('URI');
-    expect(ent.url).toBe('http://example.com/base/URI');
+    expect(ent.uri).toBe('URI');
     expect(ent.external!.isPublic).toBe(true);
     expect(ent.external!.isPrivate).toBe(false);
   });

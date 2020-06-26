@@ -76,3 +76,5 @@ export type TNode =
 //   | 'element'
 //   | 'instruction'
 //   | 'text';
+
+export type TFetchFn = (uri: string) => Promise<string>;

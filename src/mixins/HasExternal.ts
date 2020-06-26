@@ -9,12 +9,15 @@ import { External } from '../dtd/External';
 import { validatePubIdLiteral } from '../utils/validators';
 import { DeclarationBase, DeclarationConstructor } from './DeclarationBase';
 import { InvalidExternalID } from '../exceptions/InvalidExternalID';
+import { TFetchFn } from '..';
 
 export function HasExternal<T extends DeclarationConstructor<DeclarationBase>>(
   Base: T,
 ) {
   return class extends Base {
     readonly urlBase: string;
+
+    protected options?: { fetchFn: TFetchFn };
 
     protected _state = EEntityState.unknown;
 
@@ -34,6 +37,10 @@ export function HasExternal<T extends DeclarationConstructor<DeclarationBase>>(
 
     get id(): string | undefined {
       return this._id || this.external!.name;
+    }
+
+    get uri(): string | undefined {
+      return this.external && this.external.uri;
     }
 
     get url(): string | undefined {
@@ -67,7 +74,7 @@ export function HasExternal<T extends DeclarationConstructor<DeclarationBase>>(
 
     constructor(...args: any[]) {
       super(args[0]);
-      this.urlBase = args[1] || '';
+      this.options = args[1];
     }
 
     protected parseExternal(): void {
@@ -99,7 +106,7 @@ export function HasExternal<T extends DeclarationConstructor<DeclarationBase>>(
     protected fetch(): void {
       if (this._state != EEntityState.unknown) return;
       this._state = EEntityState.fetching;
-      this.external!.fetch(this.urlBase)
+      this.external!.fetchFn!(this.external!.uri)
         .then(res => {
           this._value = res;
           this._state = EEntityState.ready;
