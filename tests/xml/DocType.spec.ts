@@ -4,7 +4,6 @@
  * Author: eidng8
  */
 
-import moxios = require('moxios');
 import { DocType } from '../../src';
 
 describe('Internals', () => {
@@ -39,80 +38,58 @@ describe('Internals', () => {
 });
 
 describe('Externals', () => {
-  let doctype: DocType;
-
-  beforeEach(() => {
-    moxios.install();
-    doctype = new DocType('http://example.com/base');
-  });
-
-  afterEach(() => {
-    moxios.uninstall();
-  });
-
   it('should parse private external ID', async () => {
-    expect.assertions(4);
-    moxios.wait(() => {
-      const request = moxios.requests.mostRecent();
-      expect(request.url).toBe('DTD_location');
-      expect(request.config.baseURL).toBe('http://example.com/base');
-      request.respondWith({
-        status: 200,
-        response: '<!ENTITY test1 "val1"><!--ccc--><!ENTITY test2 "val2">',
-      });
-      // .then(async () => {
-      //   done();
-      // });
+    expect.assertions(3);
+    const doctype = new DocType({
+      urlBase: 'http://example.com/base',
+      fetchFn: url => {
+        expect(url).toBe('http://example.com/base/DTD_location');
+        return Promise.resolve(
+          '<!ENTITY test1 "val1"><!--ccc--><!ENTITY test2 "val2">',
+        );
+      },
     });
     await doctype.parse('root SYSTEM "DTD_location"');
     expect(await doctype.getEntity('test1').value).toBe('val1');
     expect(await doctype.getEntity('test2').value).toBe('val2');
   });
 
-  it('should parse public external ID', async done => {
+  it('should parse public external ID', async () => {
     expect.assertions(3);
-    moxios.wait(() => {
-      const request = moxios.requests.mostRecent();
-      expect(request.url).toBe('DTD_location');
-      request
-        .respondWith({
-          status: 200,
-          response: '<!ENTITY test1 "val1"><!----><!ENTITY test2 "val2">',
-        })
-        .then(async () => {
-          expect(await doctype.getEntity('test1').value).toBe('val1');
-          expect(await doctype.getEntity('test2').value).toBe('val2');
-          done();
-        });
+    const doctype = new DocType({
+      urlBase: 'http://example.com/base',
+      fetchFn: url => {
+        expect(url).toBe('http://example.com/base/DTD_location');
+        return Promise.resolve(
+          '<!ENTITY test1 "val1"><!----><!ENTITY test2 "val2">',
+        );
+      },
     });
     await doctype.parse('root PUBLIC "DTD_name" "DTD_location"');
+    expect(await doctype.getEntity('test1').value).toBe('val1');
+    expect(await doctype.getEntity('test2').value).toBe('val2');
   });
 
-  it('should parse mixed', async done => {
+  it('should parse mixed', async () => {
     expect.assertions(2);
-    moxios.wait(() => {
-      const request = moxios.requests.mostRecent();
-      expect(request.url).toBe('DTD_location');
-      request
-        .respondWith({
-          status: 200,
-          response: '<!ENTITY test "abc">',
-        })
-        .then(async () => {
-          expect(await doctype.getEntity('test').value).toBe('abc');
-          done();
-        });
+    const doctype = new DocType({
+      urlBase: 'http://example.com/base',
+      fetchFn: url => {
+        expect(url).toBe('http://example.com/base/DTD_location');
+        return Promise.resolve('<!ENTITY test "abc">');
+      },
     });
     await doctype.parse(
       'root PUBLIC "DTD_name" "DTD_location" [<!ENTITY test "abc">]',
     );
+    expect(await doctype.getEntity('test').value).toBe('abc');
   });
 });
 
 describe('Real world samples', () => {
   it('should parse XHTML transitional', async () => {
     jest.setTimeout(50000);
-    await new DocType('http://www.w3.org/TR/REC-html40')
+    await new DocType({ urlBase: 'http://www.w3.org/TR/REC-html40' })
       .parse(`HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
   "http://www.w3.org/TR/REC-html40/loose.dtd"`);
   });

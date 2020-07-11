@@ -9,6 +9,7 @@ import { EEntityState } from '../types/dtd/EntityState';
 import { validateEntityValue, validateName } from '../utils/validators';
 import { DeclarationBase } from '../mixins/DeclarationBase';
 import { HasExternal } from '../mixins/HasExternal';
+import { IExternalOptions } from '..';
 
 export default class EntityDeclaration extends HasExternal(DeclarationBase)
   implements IEntityDeclaration {
@@ -42,10 +43,7 @@ export default class EntityDeclaration extends HasExternal(DeclarationBase)
     return !this._general;
   }
 
-  constructor(
-    declaration: string,
-    options?: { fetchFn: (uri: string) => Promise<string> },
-  ) {
+  constructor(declaration: string, options?: IExternalOptions) {
     // @ts-ignore: TS2554
     super(declaration, options);
   }
@@ -54,7 +52,6 @@ export default class EntityDeclaration extends HasExternal(DeclarationBase)
     super.parse();
     if ('PUBLIC' == this.parts[0] || 'SYSTEM' == this.parts[0]) {
       this.parseExternal();
-      this.external!.fetchFn = this.options && this.options.fetchFn;
     } else {
       this._value = validateEntityValue(this.parts.shift()!, this.declaration);
       this._state = EEntityState.ready;

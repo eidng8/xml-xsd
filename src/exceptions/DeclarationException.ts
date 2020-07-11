@@ -17,15 +17,35 @@ export type ExceptionConstructor = new (
  * exceptions.
  */
 export class DeclarationException extends Error {
-  protected readonly _message: string;
+  /**
+   * Maximum length of a truncated excerpt, including the ending ellipsis.
+   * Defaults to `100`.
+   */
+  static excerptLength = 100;
 
   readonly input: string;
 
   readonly context?: string;
 
+  protected readonly _message: string;
+
+  get inputEllipsis(): string | undefined {
+    if (!this.input) return undefined;
+    return this.input.length > DeclarationException.excerptLength
+      ? this.input.substr(0, DeclarationException.excerptLength - 3) + '...'
+      : this.input;
+  }
+
+  get contextEllipsis(): string | undefined {
+    if (!this.context) return undefined;
+    return this.input.length > DeclarationException.excerptLength
+      ? this.context.substr(0, DeclarationException.excerptLength - 3) + '...'
+      : this.context;
+  }
+
   get message(): string {
-    let msg = `${this._message || ''}\nINPUT: \`${this.input}\``;
-    if (this.context) return `${msg}\nSOURCE: \`${this.context}\``;
+    let msg = `${this._message || ''}\nINPUT: \`${this.inputEllipsis}\``;
+    if (this.context) return `${msg}\nSOURCE: \`${this.contextEllipsis}\``;
     return msg;
   }
 

@@ -82,16 +82,16 @@ describe('External DTD', () => {
 
   it('fetches remote content', done => {
     expect.assertions(4);
-    const external = new External([
-      'PUBLIC',
-      '"-//W3C//DTD HTML 4.0 Transitional//EN"',
-      '"external.dtd"',
-    ]);
-    external.fetchFn = uri => {
-      expect(uri).toBe('external.dtd');
-      expect(external.state).toBe(EEntityState.fetching);
-      return Promise.resolve('abc');
-    };
+    const external = new External(
+      ['PUBLIC', '"-//W3C//DTD HTML 4.0 Transitional//EN"', '"external.dtd"'],
+      {
+        fetchFn: uri => {
+          expect(uri).toBe('external.dtd');
+          expect(external.state).toBe(EEntityState.fetching);
+          return Promise.resolve('abc');
+        },
+      },
+    );
     external.fetch(/*'http://example.com/base'*/).then(res => {
       expect(res).toBe('abc');
       expect(external.state).toBe(EEntityState.ready);

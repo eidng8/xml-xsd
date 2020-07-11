@@ -85,13 +85,14 @@ describe('Value queue', () => {
   it('should resolve all subscribers', async done => {
     expect.assertions(2);
     const declaration = '<!ENTITY name PUBLIC "public_ID" "URI">';
-    const ent = new EntityDeclaration(declaration);
-    ent.external!.fetchFn = () => {
-      Promise.all([ent.value, ent.value]).then(vals => {
-        expect(vals).toEqual(['abc', 'abc']);
-      });
-      return Promise.resolve('abc');
-    };
+    const ent = new EntityDeclaration(declaration, {
+      fetchFn: () => {
+        Promise.all([ent.value, ent.value]).then(vals => {
+          expect(vals).toEqual(['abc', 'abc']);
+        });
+        return Promise.resolve('abc');
+      },
+    });
     ent.parse();
     ent.value.then(res => {
       expect(res).toBe('abc');
@@ -99,23 +100,24 @@ describe('Value queue', () => {
     });
   });
 
-  it('should reject all subscribers', async done => {
+  it('should reject all subscriptions', async done => {
     expect.assertions(6);
     const declaration = '<!ENTITY name PUBLIC "public_ID" "URI">';
-    const ent = new EntityDeclaration(declaration);
-    ent.external!.fetchFn = () => {
-      Promise.allSettled([ent.value, ent.value]).then(errs => {
-        expect(errs.length).toBe(2);
-        expect(errs[0].status).toBe('rejected');
-        expect(errs[0]['reason']['response']['data']).toBe('abc');
-        expect(errs[1].status).toBe('rejected');
-        expect(errs[1]['reason']['response']['data']).toBe('abc');
-      });
-      return Promise.reject('abc');
-    };
+    const ent = new EntityDeclaration(declaration, {
+      fetchFn: () => {
+        Promise.allSettled([ent.value, ent.value]).then(errs => {
+          expect(errs.length).toBe(2);
+          expect(errs[0].status).toBe('rejected');
+          expect(errs[0]['reason']).toBe('abc');
+          expect(errs[1].status).toBe('rejected');
+          expect(errs[1]['reason']).toBe('abc');
+          done();
+        });
+        return Promise.reject('abc');
+      },
+    });
     ent.parse().value.catch(err => {
       expect(err).toEqual('abc');
-      done();
     });
   });
 });
@@ -143,23 +145,26 @@ function test(parameter) {
       expect.assertions(15);
       let declaration = '<!ENTITY name PUBLIC "public_ID" "URI">';
       if (parameter) declaration = '<!ENTITY % name PUBLIC "public_ID" "URI">';
-      const ent = new EntityDeclaration(declaration);
-      ent.external!.fetchFn = () => {
-        expect(ent.name).toBe('name');
-        expect(ent.external!.type).toBe(EDtdExternalType.public);
-        expect(ent.general).toBe(!parameter);
-        expect(ent.isInternal).toBe(false);
-        expect(ent.isExternal).toBe(true);
-        expect(ent.isParsed).toBe(true);
-        expect(ent.isParameter).toBe(parameter);
-        expect(ent.state).toBe(EEntityState.ready);
-        expect(ent.external!.name).toBe('public_ID');
-        expect(ent.external!.uri).toBe('URI');
-        expect(ent.external!.unparsed).toBeUndefined();
-        expect(ent.external!.isPublic).toBe(true);
-        expect(ent.external!.isPrivate).toBe(false);
-        return Promise.resolve('abc');
-      };
+      const ent = new EntityDeclaration(declaration, {
+        urlBase: 'http://example.com/',
+        fetchFn: () => {
+          expect(ent.name).toBe('name');
+          expect(ent.general).toBe(!parameter);
+          expect(ent.isInternal).toBe(false);
+          expect(ent.isExternal).toBe(true);
+          expect(ent.isParsed).toBe(true);
+          expect(ent.isParameter).toBe(parameter);
+          expect(ent.state).toBe(EEntityState.fetching);
+          expect(ent.type).toBe(EDtdExternalType.public);
+          expect(ent.id).toBe('public_ID');
+          expect(ent.uri).toBe('URI');
+          expect(ent.url).toBe('http://example.com/URI');
+          expect(ent.unparsed).toBeUndefined();
+          expect(ent.isPublic).toBe(true);
+          expect(ent.isPrivate).toBe(false);
+          return Promise.resolve('abc');
+        },
+      });
       ent.parse();
       ent.value.then(val => {
         expect(val).toBe('abc');
@@ -171,22 +176,23 @@ function test(parameter) {
       expect.assertions(13);
       let declaration = "<!ENTITY name SYSTEM 'URI'>";
       if (parameter) declaration = "<!ENTITY % name SYSTEM 'URI'>";
-      const ent = new EntityDeclaration(declaration);
-      ent.external!.fetchFn = () => {
-        expect(ent.name).toBe('name');
-        expect(ent.general).toBe(!parameter);
-        expect(ent.isInternal).toBe(false);
-        expect(ent.isExternal).toBe(true);
-        expect(ent.isParsed).toBe(true);
-        expect(ent.isParameter).toBe(parameter);
-        expect(ent.external!.type).toBe(EDtdExternalType.private);
-        expect(ent.external!.uri).toBe('URI');
-        expect(ent.external!.name).toBeUndefined();
-        expect(ent.external!.unparsed).toBeUndefined();
-        expect(ent.external!.isPublic).toBe(false);
-        expect(ent.external!.isPrivate).toBe(true);
-        return Promise.resolve('abc');
-      };
+      const ent = new EntityDeclaration(declaration, {
+        fetchFn: () => {
+          expect(ent.name).toBe('name');
+          expect(ent.general).toBe(!parameter);
+          expect(ent.isInternal).toBe(false);
+          expect(ent.isExternal).toBe(true);
+          expect(ent.isParsed).toBe(true);
+          expect(ent.isParameter).toBe(parameter);
+          expect(ent.external!.type).toBe(EDtdExternalType.private);
+          expect(ent.external!.uri).toBe('URI');
+          expect(ent.external!.name).toBeUndefined();
+          expect(ent.external!.unparsed).toBeUndefined();
+          expect(ent.external!.isPublic).toBe(false);
+          expect(ent.external!.isPrivate).toBe(true);
+          return Promise.resolve('abc');
+        },
+      });
       ent.parse();
       ent.value.then(val => {
         expect(val).toBe('abc');

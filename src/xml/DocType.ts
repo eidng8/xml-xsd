@@ -15,7 +15,7 @@ import { decompose, extractMarkup } from '../utils/markup';
 import { InvalidExternalID } from '../exceptions/InvalidExternalID';
 import { DeclarationException } from '../exceptions/DeclarationException';
 import { InvalidIntSubset } from '../exceptions/InvalidIntSubset';
-import { TFetchFn } from '..';
+import { IExternalOptions } from '../types/xml';
 
 /**
  * Due to the synchronous nature of `sax.js`, externals are not supported.
@@ -23,7 +23,7 @@ import { TFetchFn } from '..';
 export default class DocType implements IDocType {
   readonly type = 'doctype' as 'doctype';
 
-  private readonly options?: { fetchFn: TFetchFn };
+  private readonly options?: IExternalOptions;
 
   private dtd = {
     root: '',
@@ -49,7 +49,7 @@ export default class DocType implements IDocType {
     return this.dtd.root;
   }
 
-  constructor(options?: { fetchFn: TFetchFn }) {
+  constructor(options?: IExternalOptions) {
     this.options = options;
   }
 
@@ -77,21 +77,18 @@ export default class DocType implements IDocType {
       try {
         await this.parseRoot(dtd);
       } catch (e) {
-        throw new DeclarationException(e.input, e.context, e._message);
+        throw new DeclarationException(e.input || dtd, e.context, e.message);
       }
     } else {
       const ep = dtd.lastIndexOf(']');
       if (-1 == ep) {
-        throw new InvalidIntSubset(
-          dtd.length > 20 ? dtd.substr(0, 20) + '...' : dtd,
-          dtd,
-        );
+        throw new InvalidIntSubset(dtd);
       }
       try {
         await this.parseRoot(dtd.substring(0, bp));
         await this.parseInternal(dtd.substring(bp, ep + 1));
       } catch (e) {
-        throw new DeclarationException(e.input, e.context, e._message);
+        throw new DeclarationException(e.input, e.context, e.message);
       }
     }
   }
@@ -126,8 +123,7 @@ export default class DocType implements IDocType {
     let external: External, id!: string;
     try {
       id = externalDecl.join(' ');
-      external = new External(externalDecl);
-      external.fetchFn = this.options && this.options.fetchFn;
+      external = new External(externalDecl, this.options);
     } catch (e) {
       throw new InvalidExternalID(id);
     }

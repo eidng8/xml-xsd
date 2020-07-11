@@ -78,3 +78,8 @@ export type TNode =
 //   | 'text';
 
 export type TFetchFn = (uri: string) => Promise<string>;
+
+export interface IExternalOptions {
+  urlBase?: string;
+  fetchFn?: TFetchFn;
+}

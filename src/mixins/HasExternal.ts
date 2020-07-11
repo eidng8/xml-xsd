@@ -9,15 +9,14 @@ import { External } from '../dtd/External';
 import { validatePubIdLiteral } from '../utils/validators';
 import { DeclarationBase, DeclarationConstructor } from './DeclarationBase';
 import { InvalidExternalID } from '../exceptions/InvalidExternalID';
-import { TFetchFn } from '..';
+import { IExternalOptions } from '../types/xml';
+import { EDtdExternalType } from '../types/dtd/DtdExternalType';
 
 export function HasExternal<T extends DeclarationConstructor<DeclarationBase>>(
   Base: T,
 ) {
   return class extends Base {
-    readonly urlBase: string;
-
-    protected options?: { fetchFn: TFetchFn };
+    protected options?: IExternalOptions;
 
     protected _state = EEntityState.unknown;
 
@@ -36,7 +35,15 @@ export function HasExternal<T extends DeclarationConstructor<DeclarationBase>>(
     }
 
     get id(): string | undefined {
-      return this._id || this.external!.name;
+      return this._id || (this.external && this.external!.name);
+    }
+
+    get external(): External | undefined {
+      return this._external;
+    }
+
+    get type(): EDtdExternalType | undefined {
+      return this.external && this.external.type;
     }
 
     get uri(): string | undefined {
@@ -44,20 +51,26 @@ export function HasExternal<T extends DeclarationConstructor<DeclarationBase>>(
     }
 
     get url(): string | undefined {
-      return (
-        this.external &&
-        this.external.uri &&
-        this.urlBase &&
-        `${this.urlBase}/${this.external.uri}`
-      );
+      return this.external && this.external.url;
     }
 
+    get isPublic(): boolean {
+      return this.external ? this.external.isPublic : false;
+    }
+
+    get isPrivate(): boolean {
+      return this.external ? this.external.isPrivate : false;
+    }
+
+    get unparsed(): string | undefined {
+      return this.external && this.external.unparsed;
+    }
+
+    /**
+     * Whether the external is only a public ID, which is only a name string.
+     */
     get isPublicId(): boolean {
       return !this.external;
-    }
-
-    get external(): External | undefined {
-      return this._external;
     }
 
     get value(): Promise<string | undefined> {
@@ -85,7 +98,7 @@ export function HasExternal<T extends DeclarationConstructor<DeclarationBase>>(
       if (undefined === this._id) {
         const input = this.parts.join(' ');
         try {
-          this._external = new External(this.parts);
+          this._external = new External(this.parts, this.options);
         } catch (e) {
           this.throwError(InvalidExternalID, input);
         }
@@ -106,7 +119,7 @@ export function HasExternal<T extends DeclarationConstructor<DeclarationBase>>(
     protected fetch(): void {
       if (this._state != EEntityState.unknown) return;
       this._state = EEntityState.fetching;
-      this.external!.fetchFn!(this.external!.uri)
+      this.external!.fetch()
         .then(res => {
           this._value = res;
           this._state = EEntityState.ready;

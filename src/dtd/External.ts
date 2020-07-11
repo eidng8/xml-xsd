@@ -11,15 +11,18 @@ import {
 import { EEntityState } from '../types/dtd/EntityState';
 import { InvalidExternalID } from '../exceptions/InvalidExternalID';
 import { InvalidUnparsedEntity } from '../exceptions/InvalidUnparsedEntity';
-import { TFetchFn } from '../types/xml';
+import { IExternalOptions, TFetchFn } from '../types/xml';
 
 export class External {
-  fetchFn?: TFetchFn;
+  private readonly options?;
 
   private _type?: EDtdExternalType;
 
   private _name?: string;
 
+  /**
+   * URI in the DTD external definition.
+   */
   private _uri!: string;
 
   private _unparsed?: string;
@@ -40,6 +43,16 @@ export class External {
 
   get uri(): string {
     return this._uri;
+  }
+
+  get url(): string {
+    return this.options && this.options.urlBase
+      ? `${this.options.urlBase}${this.uri}`
+      : this.uri;
+  }
+
+  get fetchFn(): TFetchFn {
+    return this.options && this.options.fetchFn;
   }
 
   /**
@@ -115,7 +128,15 @@ export class External {
     return undefined === this._unparsed;
   }
 
-  constructor(parts: string[]) {
+  constructor(parts: string[], options?: IExternalOptions) {
+    this.options = options;
+    if (
+      this.options &&
+      this.options.urlBase &&
+      !this.options.urlBase.endsWith('/')
+    ) {
+      this.options.urlBase = `${this.options.urlBase}/`;
+    }
     const type = parts.shift();
     switch (type) {
       case 'PUBLIC':
@@ -137,7 +158,7 @@ export class External {
       throw new Error('Fetcher function has not been set.');
     }
     this._state = EEntityState.fetching;
-    return this.fetchFn(this.uri).then(res => {
+    return this.fetchFn(this.url).then(res => {
       this._state = EEntityState.ready;
       return res;
     });
