@@ -85,12 +85,3 @@ describe('Externals', () => {
     expect(await doctype.getEntity('test').value).toBe('abc');
   });
 });
-
-describe('Real world samples', () => {
-  it('should parse XHTML transitional', async () => {
-    jest.setTimeout(50000);
-    await new DocType({ urlBase: 'http://www.w3.org/TR/REC-html40' })
-      .parse(`HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
-  "http://www.w3.org/TR/REC-html40/loose.dtd"`);
-  });
-});

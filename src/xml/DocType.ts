@@ -184,7 +184,7 @@ export default class DocType implements IDocType {
    * @param declaration
    */
   private parseEntity(declaration: string): void {
-    const entity = new EntityDeclaration(declaration).parse();
+    const entity = new EntityDeclaration(declaration, this.options).parse();
     if (entity.isParameter) this.dtd.entities.parameter[entity.name] = entity;
     else this.dtd.entities.general[entity.name] = entity;
   }

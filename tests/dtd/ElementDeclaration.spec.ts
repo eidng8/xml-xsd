@@ -36,7 +36,7 @@ it('should have enumerated content', () => {
   expect(element.enumValues).toEqual(['child5', 'child6']);
 });
 
-it.skip('should have mixed content', () => {
+it('should have mixed content', () => {
   expect.assertions(4);
   const element = new ElementDeclaration(
     '<!ELEMENT tag (#PCDATA,child1,child2?,child3*,child4+,(child5|child6))*>',
