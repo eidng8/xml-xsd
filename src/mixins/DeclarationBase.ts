@@ -25,7 +25,7 @@ export class DeclarationBase implements IDeclarationBase {
   parse(): DeclarationBase {
     this.parts = this.decompose();
     if (!this.parts || this.parts.length < 2) {
-      this.throwError(DeclarationException, this.parts.join(' '));
+      this.throwError(DeclarationException, this.declaration);
     }
     this.parseName();
     return this;
