@@ -29,7 +29,7 @@
   ],
   "dependencies": {
     "iconv-lite": "^0.5.1",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "xml-js": "github:eidng8/xml-js",
     "xpath-ts": "^1.3.13",
     "xregexp": "^4.3.0"
